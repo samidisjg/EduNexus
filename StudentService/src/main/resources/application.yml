@@ -1,0 +1,55 @@
+server:
+  port: ${SERVER_PORT:9095}
+  servlet:
+    context-path: /students-service
+
+spring:
+  application:
+    name: student-service
+  docker:
+    compose:
+      enabled: false
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:student_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
+      minimum-idle: ${DB_MIN_IDLE:2}
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.springframework.web: INFO
+
+# Internal communication configuration
+internal:
+  api:
+    key: ${INTERNAL_API_KEY:change-me}
+
+# External service URLs
+services:
+  course-service:
+    base-url: ${COURSE_SERVICE_URL:http://localhost:9096}
+

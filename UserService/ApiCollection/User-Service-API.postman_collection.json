@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "User Service API",
+    "description": "User Service Authentication & Authorization API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"john_doe\",\n  \"userEmail\": \"john@example.com\",\n  \"userPassword\": \"SecurePassword123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:9091/user-service/auth/sign-up",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9091",
+              "path": ["user-service", "auth", "sign-up"]
+            }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userEmail\": \"john@example.com\",\n  \"userPassword\": \"SecurePassword123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:9091/user-service/auth/sign-in",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9091",
+              "path": ["user-service", "auth", "sign-in"]
+            }
+          }
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:9091/user-service/auth/validate-token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9091",
+              "path": ["user-service", "auth", "validate-token"]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:9091/user-service/auth/user/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9091",
+              "path": ["user-service", "auth", "user", "1"]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:9091/user-service/auth/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9091",
+              "path": ["user-service", "auth", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Via API Gateway",
+      "item": [
+        {
+          "name": "Sign Up (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"jane_smith\",\n  \"userEmail\": \"jane@example.com\",\n  \"userPassword\": \"SecurePassword456\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/api-gateway/user-service/auth/sign-up",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api-gateway", "user-service", "auth", "sign-up"]
+            }
+          }
+        },
+        {
+          "name": "Sign In (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userEmail\": \"jane@example.com\",\n  \"userPassword\": \"SecurePassword456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/api-gateway/user-service/auth/sign-in",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api-gateway", "user-service", "auth", "sign-in"]
+            }
+          }
+        },
+        {
+          "name": "Student - Add Student (Protected)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentName\": \"Alice Johnson\",\n  \"email\": \"alice@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/api-gateway/student-service/students",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api-gateway", "student-service", "students"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
