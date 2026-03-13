@@ -1,0 +1,202 @@
+{
+  "info": {
+    "_postman_id": "c76b7b03-6d4c-44fb-a252-a214c413034f",
+    "name": "Student Service API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28376350",
+    "_collection_link": "https://go.postman.co/collection/28376350-c76b7b03-6d4c-44fb-a252-a214c413034f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Internal",
+      "item": [
+        {
+          "name": "enroll Student Count by Course (Internal)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Base-Url}}/{{Context-Path-studentService}}/internal/students/count?courseId=",
+              "host": [
+                "{{Base-Url}}"
+              ],
+              "path": [
+                "{{Context-Path-studentService}}",
+                "internal",
+                "students",
+                "count"
+              ],
+              "query": [
+                {
+                  "key": "courseId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Generated from cURL: \ncurl -X GET \"http://localhost:8080/internal/students/count?courseId={courseId}\"\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "get Student List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "add Student",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentId\": \"STU-2026-0001\",\n  \"name\": \"Kavindu Perera\",\n  \"email\": \"kavindu.perera@sliit.lk\",\n  \"phone\": \"+94771234567\",\n  \"department\": \"Computer Science\",\n  \"year\": 4\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get Students with Filters",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students?name=Kavindu Perera&email=kavindu.perera@sliit.lk",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "Kavindu Perera"
+            },
+            {
+              "key": "email",
+              "value": "kavindu.perera@sliit.lk"
+            }
+          ]
+        },
+        "description": "Generated from cURL: \ncurl -X GET \"http://localhost:8080/students?name=John&email=john@example.com\"\n"
+      },
+      "response": []
+    },
+    {
+      "name": "get Student By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students/{{studentId}}",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students",
+            "{{studentId}}"
+          ]
+        },
+        "description": "Generated from cURL: \ncurl -X GET \"http://localhost:8080/students/{studentId}\"\n"
+      },
+      "response": []
+    },
+    {
+      "name": "Student Enroll request for Course",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students/{{studentId}}/enroll?courseId=1234",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students",
+            "{{studentId}}",
+            "enroll"
+          ],
+          "query": [
+            {
+              "key": "courseId",
+              "value": "1234"
+            }
+          ]
+        },
+        "description": "Generated from cURL: \ncurl -X POST \"http://localhost:8080/students/{studentId}/enroll?courseId={courseId}\"\n"
+      },
+      "response": []
+    },
+    {
+      "name": "get Enrollments for Students ",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{Base-Url}}/{{Context-Path-studentService}}/students/{{studentId}}/enrollments",
+          "host": [
+            "{{Base-Url}}"
+          ],
+          "path": [
+            "{{Context-Path-studentService}}",
+            "students",
+            "{{studentId}}",
+            "enrollments"
+          ]
+        },
+        "description": "Generated from cURL: \ncurl -X GET \"http://localhost:8080/students/{studentId}/enrollments\"\n"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "Base-Url",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "Context-Path-studentService",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "studentId",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
