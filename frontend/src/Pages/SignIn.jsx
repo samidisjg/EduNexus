@@ -1,11 +1,12 @@
 import { Alert, Button, Label, Spinner, TextInput, Card } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 import { FaUserCircle, FaLock, FaGraduationCap } from "react-icons/fa";
 import { HiAcademicCap } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  resetAuthState,
   signInStart,
   signInSuccess,
   signInFailure,
@@ -23,6 +24,10 @@ const SignIn = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    dispatch(resetAuthState());
+  }, [dispatch]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -36,7 +41,6 @@ const SignIn = () => {
       const result = await authService.signIn(formData);
 
       if (result.success && result.data) {
-        // Dispatch user data to Redux store
         dispatch(signInSuccess(result.data));
         navigate("/");
       } else {
@@ -44,7 +48,7 @@ const SignIn = () => {
       }
     } catch (err) {
       console.error("Sign in error:", err);
-      dispatch(signInFailure("Something went wrong. Please try again."));
+      dispatch(signInFailure(err.message || "Something went wrong. Please try again."));
     }
   };
 
@@ -177,8 +181,8 @@ const SignIn = () => {
 
                     <div className="text-center">
                       <p className="text-gray-700 dark:text-gray-300">
-                        Don't have an account?{" "}
-                        <Link 
+                        Don&apos;t have an account?{" "}
+                        <Link
                           to="/sign-up" 
                           className="text-blue-700 dark:text-cyan-400 font-bold hover:underline hover:text-blue-800 dark:hover:text-cyan-300 transition-colors"
                         >
