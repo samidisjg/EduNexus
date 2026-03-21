@@ -8,6 +8,7 @@ import FooterComponent from "./components/FooterComponent";
 import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
+import StudentServicePage from "./Pages/StudentServicePage";
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -41,8 +42,8 @@ const App = () => {
                   <Route path="/sign-up" element={<SignUp />} />
                   <Route path="/component" element={<Component />} />
                   <Route path="/dashboard" element={<Component />} />
-                  <Route path="/dashboard/student/course" element={<Component />} />
-                  <Route path="/dashboard/student/library" element={<Component />} />
+                  <Route path="/dashboard/student/course" element={<StudentServicePage />} />
+                  <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                   <Route path="/dashboard/staff/course" element={<Component />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
                 </Routes>
@@ -59,8 +60,8 @@ const App = () => {
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/component" element={<Component />} />
                 <Route path="/dashboard" element={<Component />} />
-                <Route path="/dashboard/student/course" element={<Component />} />
-                <Route path="/dashboard/student/library" element={<Component />} />
+                <Route path="/dashboard/student/course" element={<StudentServicePage />} />
+                <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                 <Route path="/dashboard/staff/course" element={<Component />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
               </Routes>
