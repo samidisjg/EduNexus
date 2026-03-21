@@ -8,16 +8,16 @@ const FooterComponent = () => {
       <div className="w-full max-w-7xl mx-auto">
          <div className="grid w-full justify-between sms:flex md:grid-cols-1">
             <div className="mt-5">
-               <Link to='/' className="self-center">
-                  DeliveryYa
+               <Link to='/' className="self-center text-xl font-bold text-blue-900 dark:text-white">
+                  EduNexus
                </Link>
             </div>
             <div className="grid grid-cols-2 gap-8 mt-4 sms:grid-cols-3 md:grid-cols-4 sm:gap-6">
                <div className="">
                   <Footer.Title title="About"/>
                   <Footer.LinkGroup col>
-                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Services</Footer.Link>
-                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Partners</Footer.Link>
+                     <Footer.Link as={Link} to="/library">Library Portal</Footer.Link>
+                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Academic Services</Footer.Link>
                   </Footer.LinkGroup>
                </div>
                <div className="">
@@ -31,21 +31,21 @@ const FooterComponent = () => {
                   <Footer.Title title="Legal"/>
                   <Footer.LinkGroup col>
                      <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Privacy Policy</Footer.Link>
-                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Terms & Condition</Footer.Link>
+                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">Terms & Conditions</Footer.Link>
                   </Footer.LinkGroup>
                </div>
                <div className="">
                   <Footer.Title title="Connect With Us"/>
                   <Footer.LinkGroup col>
-                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">+ 71 2345 6789</Footer.Link>
-                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">+ 71 2345 6789</Footer.Link>
+                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">support@edunexus.edu</Footer.Link>
+                     <Footer.Link href="#" target="_blank" rel="noopener noreferrer">+94 71 234 5678</Footer.Link>
                   </Footer.LinkGroup>
                </div>
             </div>
          </div>
          <Footer.Divider className="my-5"/>
          <div className="w-full sm:flex sm:items-center sm:justify-between">
-            <Footer.Copyright href="#" by="DeliveryYa" year={new Date().getFullYear()} />
+            <Footer.Copyright href="#" by="EduNexus" year={new Date().getFullYear()} />
             <div className="flex gap-6 sm:mt-0 mt-4 sm:justify-center">
                <Footer.Icon href="#" icon={BsFacebook} />
                <Footer.Icon href="#" icon={BsInstagram} />

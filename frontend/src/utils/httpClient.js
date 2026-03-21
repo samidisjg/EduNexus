@@ -44,18 +44,42 @@ export const authenticatedFetch = async (url, options = {}) => {
   return response;
 };
 
+const buildUrl = (baseUrl, endpoint) => `${baseUrl}${endpoint}`;
+
+const parseJsonResponse = async (response) => {
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+};
+
+const request = async (baseUrl, endpoint, options = {}) => {
+  const response = await authenticatedFetch(buildUrl(baseUrl, endpoint), options);
+  const data = await parseJsonResponse(response);
+
+  if (!response.ok) {
+    const error = new Error(data?.message || `Request failed with status ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+};
+
 /**
  * Make a GET request to a protected endpoint
  * @param {string} endpoint - API endpoint path
  * @returns {Promise<Object>} - API response data
  */
 export const get = async (endpoint) => {
-  const response = await authenticatedFetch(`${API_CONFIG.USER_SERVICE}${endpoint}`, {
+  return request(API_CONFIG.USER_SERVICE, endpoint, {
     method: 'GET',
   });
-
-  return response.json();
 };
+
+export const getFrom = async (baseUrl, endpoint) =>
+  request(baseUrl, endpoint, {
+    method: 'GET',
+  });
 
 /**
  * Make a POST request to a protected endpoint
@@ -64,13 +88,17 @@ export const get = async (endpoint) => {
  * @returns {Promise<Object>} - API response data
  */
 export const post = async (endpoint, data) => {
-  const response = await authenticatedFetch(`${API_CONFIG.USER_SERVICE}${endpoint}`, {
+  return request(API_CONFIG.USER_SERVICE, endpoint, {
     method: 'POST',
     body: JSON.stringify(data),
   });
-
-  return response.json();
 };
+
+export const postTo = async (baseUrl, endpoint, data) =>
+  request(baseUrl, endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 
 /**
  * Make a PUT request to a protected endpoint
@@ -79,13 +107,17 @@ export const post = async (endpoint, data) => {
  * @returns {Promise<Object>} - API response data
  */
 export const put = async (endpoint, data) => {
-  const response = await authenticatedFetch(`${API_CONFIG.USER_SERVICE}${endpoint}`, {
+  return request(API_CONFIG.USER_SERVICE, endpoint, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
-
-  return response.json();
 };
+
+export const putTo = async (baseUrl, endpoint, data) =>
+  request(baseUrl, endpoint, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
 
 /**
  * Make a DELETE request to a protected endpoint
@@ -93,17 +125,24 @@ export const put = async (endpoint, data) => {
  * @returns {Promise<Object>} - API response data
  */
 export const del = async (endpoint) => {
-  const response = await authenticatedFetch(`${API_CONFIG.USER_SERVICE}${endpoint}`, {
+  return request(API_CONFIG.USER_SERVICE, endpoint, {
+    method: 'DELETE',
+  });
+};
+
+export const deleteFrom = async (baseUrl, endpoint) =>
+  request(baseUrl, endpoint, {
     method: 'DELETE',
   });
 
-  return response.json();
-};
-
 export default {
   get,
+  getFrom,
   post,
+  postTo,
   put,
+  putTo,
   del,
+  deleteFrom,
   authenticatedFetch,
 };
