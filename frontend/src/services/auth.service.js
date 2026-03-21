@@ -60,6 +60,9 @@ class AuthService {
    * @returns {Promise<Object>} - API response with user data and tokens
    */
   async signIn(credentials) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+
     try {
       const response = await fetch(
         `${API_CONFIG.USER_SERVICE}${API_ENDPOINTS.AUTH.SIGN_IN}`,
@@ -68,6 +71,7 @@ class AuthService {
           headers: {
             'Content-Type': 'application/json',
           },
+          signal: controller.signal,
           body: JSON.stringify({
             userEmail: credentials.userEmail,
             userPassword: credentials.userPassword,
@@ -75,10 +79,15 @@ class AuthService {
         }
       );
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error(`Invalid response from server: ${response.status} ${response.statusText}`);
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Sign in failed');
+        throw new Error(data.message || `Sign in failed: ${response.status} ${response.statusText}`);
       }
 
       // Store tokens if sign in is successful
@@ -94,10 +103,24 @@ class AuthService {
         message: data.message || 'User signed in successfully',
       };
     } catch (error) {
+      if (error.name === 'AbortError') {
+        return {
+          success: false,
+          message: `Request timed out after ${API_CONFIG.TIMEOUT / 1000} seconds. Please check whether the API Gateway is running.`,
+        };
+      }
+
+      const isNetworkError = error instanceof TypeError && error.message.includes('fetch');
+      const message = isNetworkError
+        ? 'Backend service is unavailable. Please ensure API Gateway and User Service are running.'
+        : error.message || 'Something went wrong. Please try again.';
+
       return {
         success: false,
-        message: error.message || 'Something went wrong. Please try again.',
+        message: message,
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
