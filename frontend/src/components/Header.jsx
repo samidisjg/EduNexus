@@ -4,7 +4,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { AiOutlineSearch } from "react-icons/ai";
+import { HiLibrary } from "react-icons/hi";
 import { signOutSuccess } from "../redux/user/userSlice";
+import authService from "../services/auth.service";
 
 const Header = () => {
   const path = useLocation().pathname;
@@ -14,8 +16,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    authService.signOut();
     dispatch(signOutSuccess());
     navigate("/sign-in");
   };
@@ -77,7 +78,7 @@ const Header = () => {
               </span>
             </Dropdown.Header>
             <Dropdown.Item>
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/library">Library Portal</Link>
             </Dropdown.Item>
             <Dropdown.Item onClick={handleSignOut}>Sign Out</Dropdown.Item>
           </Dropdown>
@@ -109,12 +110,13 @@ const Header = () => {
             Component
           </Link>
         </Navbar.Link>
-        <Navbar.Link active={path === "/dash-ride"} as={"div"}>
+        <Navbar.Link active={path === "/library"} as={"div"}>
           <Link
-            to="/dash-ride"
-            className="text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
+            to="/library"
+            className="flex items-center gap-2 text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
           >
-            Dashboard
+            <HiLibrary className="text-lg" />
+            Library
           </Link>
         </Navbar.Link>
       </Navbar.Collapse>

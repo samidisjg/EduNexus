@@ -5,6 +5,8 @@ import FooterComponent from "./components/FooterComponent";
 import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LibraryDashboard from "./Pages/IT22577160/LibraryDashboard";
 
 const App = () => {
   return (
@@ -16,6 +18,14 @@ const App = () => {
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/component" element={<Component />} />
+          <Route
+            path="/library"
+            element={
+              <ProtectedRoute>
+                <LibraryDashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
       <FooterComponent />
