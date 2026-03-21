@@ -1,0 +1,197 @@
+{
+  "info": {
+    "_postman_id": "aa617c61-e410-4f41-b595-c71601a28c75",
+    "name": "course-service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "availability",
+      "id": "460a499d-26b2-4d25-b696-2e3279e4f7fb",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8086/courses/{{courseId}}/availability",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses",
+            "{{courseId}}",
+            "availability"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get courses",
+      "id": "83767238-c7d5-43b8-852c-879b7d54b828",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8086/courses",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "update capacity",
+      "id": "988bef93-5ed4-4cd3-b641-d8051c973c2c",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"capacity\": 100\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8086/courses/CS101/capacity",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses",
+            "CS101",
+            "capacity"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get course by id",
+      "id": "c4713cb2-5ac2-46ed-8afe-1c3bf12842d7",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8086/courses/CS104",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses",
+            "CS104"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "add course",
+      "id": "787122d2-aaf5-4892-9cb3-16d75fe765c1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"courseId\": \"CS105\",\n    \"name\": \"Hotel Management\",\n    \"capacity\": 50\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8086/courses",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "update status",
+      "id": "ce58b8a2-5f6b-45e8-b3f8-dba0e58ed951",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8086/courses/CS101/status?status=INACTIVE",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses",
+            "CS101",
+            "status"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "INACTIVE"
+            },
+            {
+              "key": "status",
+              "value": "ACTIVE",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get stats",
+      "id": "6a00c843-132a-4d96-a630-d3af98df8378",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8086/courses/CS102/stats",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8086",
+          "path": [
+            "courses",
+            "CS102",
+            "stats"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
