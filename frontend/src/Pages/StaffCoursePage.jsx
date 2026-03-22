@@ -44,6 +44,9 @@ const isCourseLike = (item) =>
   ("courseId" in item ||
     "name" in item ||
     "capacity" in item ||
+    "year" in item ||
+    "semester" in item ||
+    "lic" in item ||
     "faculty" in item ||
     "status" in item);
 
@@ -107,6 +110,9 @@ const buildInitialCourseForm = (faculty = "FOC") => ({
   courseId: "",
   name: "",
   capacity: 30,
+  year: 1,
+  semester: 1,
+  lic: "",
   faculty,
 });
 
@@ -126,7 +132,6 @@ const StaffCoursePage = () => {
   const selectedFaculty = facultyOptions.find((faculty) => faculty.value === facultyCode)?.value || null;
 
   const [courses, setCourses] = useState([]);
-  const [responseData, setResponseData] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState({});
@@ -136,10 +141,7 @@ const StaffCoursePage = () => {
   const [courseIdLookup, setCourseIdLookup] = useState("");
   const [capacityForm, setCapacityForm] = useState(initialCapacityForm);
   const [statusForm, setStatusForm] = useState(initialStatusForm);
-  const [statsCourseId, setStatsCourseId] = useState("");
-  const [availabilityCourseId, setAvailabilityCourseId] = useState("");
-  const [statsResult, setStatsResult] = useState(null);
-  const [availabilityResult, setAvailabilityResult] = useState(null);
+  const [selectedCourseResult, setSelectedCourseResult] = useState(null);
 
   const setLoading = (key, value) => {
     setActionLoading((prev) => ({ ...prev, [key]: value }));
@@ -152,7 +154,6 @@ const StaffCoursePage = () => {
 
     try {
       const response = await fn();
-      setResponseData(response);
       setSuccess(successMessage);
       return response;
     } catch (actionError) {
@@ -203,6 +204,18 @@ const StaffCoursePage = () => {
     setCourseForm(buildInitialCourseForm(selectedFaculty || "FOC"));
   }, [selectedFaculty]);
 
+  useEffect(() => {
+    if (!success) {
+      return undefined;
+    }
+
+    const timer = globalThis.setTimeout(() => {
+      setSuccess("");
+    }, 4000);
+
+    return () => globalThis.clearTimeout(timer);
+  }, [success]);
+
   const handleCreateCourse = async (event) => {
     event.preventDefault();
 
@@ -229,14 +242,24 @@ const StaffCoursePage = () => {
       return;
     }
 
+    const courseId = courseIdLookup.trim();
     const response = await runAction(
       "getCourseById",
-      () => courseService.getCourseById(courseIdLookup.trim()),
+      async () => {
+        const [course, stats, availability] = await Promise.all([
+          courseService.getCourseById(courseId),
+          courseService.getCourseStats(courseId),
+          courseService.getCourseAvailability(courseId),
+        ]);
+
+        return { course, stats, availability };
+      },
       "Course fetched successfully."
     );
 
     if (response) {
-      upsertCourse(response);
+      upsertCourse(response.course);
+      setSelectedCourseResult(response);
     }
   };
 
@@ -288,40 +311,6 @@ const StaffCoursePage = () => {
     }
   };
 
-  const handleGetStats = async () => {
-    if (!statsCourseId.trim()) {
-      setError("Course ID is required to load stats.");
-      return;
-    }
-
-    const response = await runAction(
-      "getStats",
-      () => courseService.getCourseStats(statsCourseId.trim()),
-      "Course stats loaded."
-    );
-
-    if (response) {
-      setStatsResult(response);
-    }
-  };
-
-  const handleGetAvailability = async () => {
-    if (!availabilityCourseId.trim()) {
-      setError("Course ID is required to check availability.");
-      return;
-    }
-
-    const response = await runAction(
-      "getAvailability",
-      () => courseService.getCourseAvailability(availabilityCourseId.trim()),
-      "Course availability loaded."
-    );
-
-    if (response) {
-      setAvailabilityResult(response);
-    }
-  };
-
   const coursesByFaculty = useMemo(
     () =>
       facultyOptions.map((faculty) => {
@@ -354,9 +343,10 @@ const StaffCoursePage = () => {
       return true;
     }
 
-    return [course.courseId, course.name, course.faculty, course.status]
+    return [course.courseId, course.name, course.faculty, course.status, course.lic]
+      .concat([course.year, course.semester])
       .filter(Boolean)
-      .some((value) => value.toLowerCase().includes(keyword));
+      .some((value) => `${value}`.toLowerCase().includes(keyword));
   });
 
   const statsSelectableCourses = [...visibleCourses].sort((left, right) =>
@@ -374,6 +364,13 @@ const StaffCoursePage = () => {
   if (!selectedFaculty) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-cyan-50 px-4 py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+        {success ? (
+          <div className="fixed right-4 top-24 z-50 w-full max-w-sm">
+            <Alert color="success" className="shadow-lg">
+              {success}
+            </Alert>
+          </div>
+        ) : null}
         <div className="mx-auto max-w-7xl space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -395,7 +392,6 @@ const StaffCoursePage = () => {
             </div>
 
             {error ? <Alert color="failure" className="mt-4">{error}</Alert> : null}
-            {success ? <Alert color="success" className="mt-4">{success}</Alert> : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -531,6 +527,13 @@ const StaffCoursePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-cyan-50 px-4 py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+      {success ? (
+        <div className="fixed right-4 top-24 z-50 w-full max-w-sm">
+          <Alert color="success" className="shadow-lg">
+            {success}
+          </Alert>
+        </div>
+      ) : null}
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -556,7 +559,6 @@ const StaffCoursePage = () => {
           </div>
 
           {error ? <Alert color="failure" className="mt-4">{error}</Alert> : null}
-          {success ? <Alert color="success" className="mt-4">{success}</Alert> : null}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -618,39 +620,86 @@ const StaffCoursePage = () => {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaSearch /> Load {selectedFaculty} Courses
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <Label value="Client-side Search" />
-                <TextInput
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Filter by course ID, name, faculty, or status"
-                />
-              </div>
-              <Button onClick={handleLoadCourses} disabled={actionLoading.listCourses}>
-                {actionLoading.listCourses ? <Spinner size="sm" /> : "Refresh Faculty Data"}
-              </Button>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaBookOpen /> Get Course By ID
+              <FaBookOpen /> Course Details
             </h2>
             <div className="space-y-3">
               <div>
                 <Label value="Course ID" />
-                <TextInput
+                <Select
                   value={courseIdLookup}
                   onChange={(event) => setCourseIdLookup(event.target.value)}
-                  placeholder="CS105"
-                />
+                >
+                  <option value="">Select a course</option>
+                  {statsSelectableCourses.map((course) => (
+                    <option key={course.courseId} value={course.courseId}>
+                      {course.courseId} - {course.name} (Y{course.year} S{course.semester})
+                    </option>
+                  ))}
+                </Select>
               </div>
               <Button onClick={handleGetCourseById} disabled={actionLoading.getCourseById}>
                 {actionLoading.getCourseById ? <Spinner size="sm" /> : "Fetch Course"}
               </Button>
+              {selectedCourseResult ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Course Name</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.course?.name || "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Capacity</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.course?.capacity ?? "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Year / Semester</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      Y{selectedCourseResult.course?.year ?? "-"} S{selectedCourseResult.course?.semester ?? "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">LIC</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.course?.lic || "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Faculty</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.course?.faculty
+                        ? facultyLabelMap[selectedCourseResult.course.faculty] || selectedCourseResult.course.faculty
+                        : "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Status</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.course?.status || "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Enrolled</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.stats?.enrolled ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Remaining Seats</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.stats?.remaining ?? selectedCourseResult.availability?.remainingSeats ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Availability</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedCourseResult.availability?.available ? "Available" : "Unavailable"}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </Card>
 
@@ -696,6 +745,43 @@ const StaffCoursePage = () => {
               <div>
                 <Label value="Faculty" />
                 <TextInput value={facultyLabelMap[selectedFaculty]} disabled readOnly />
+              </div>
+              <div>
+                <Label value="Year" />
+                <Select
+                  value={courseForm.year}
+                  onChange={(event) =>
+                    setCourseForm((prev) => ({ ...prev, year: event.target.value }))
+                  }
+                >
+                  <option value={1}>Year 1</option>
+                  <option value={2}>Year 2</option>
+                  <option value={3}>Year 3</option>
+                  <option value={4}>Year 4</option>
+                </Select>
+              </div>
+              <div>
+                <Label value="Semester" />
+                <Select
+                  value={courseForm.semester}
+                  onChange={(event) =>
+                    setCourseForm((prev) => ({ ...prev, semester: event.target.value }))
+                  }
+                >
+                  <option value={1}>Semester 1</option>
+                  <option value={2}>Semester 2</option>
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <Label value="LIC" />
+                <TextInput
+                  value={courseForm.lic}
+                  onChange={(event) =>
+                    setCourseForm((prev) => ({ ...prev, lic: event.target.value }))
+                  }
+                  placeholder="Dr. Silva"
+                  required
+                />
               </div>
               <div className="md:col-span-4">
                 <Button type="submit" disabled={actionLoading.createCourse}>
@@ -773,99 +859,6 @@ const StaffCoursePage = () => {
             </form>
           </Card>
 
-          <Card>
-            <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">
-              Course Stats
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <Label value="Course ID" />
-                <Select
-                  value={statsCourseId}
-                  onChange={(event) => setStatsCourseId(event.target.value)}
-                >
-                  <option value="">Select a course</option>
-                  {statsSelectableCourses.map((course) => (
-                    <option key={course.courseId} value={course.courseId}>
-                      {course.courseId} - {course.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <Button onClick={handleGetStats} disabled={actionLoading.getStats}>
-                {actionLoading.getStats ? <Spinner size="sm" /> : "Get Stats"}
-              </Button>
-              {statsResult ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Enrolled</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {statsResult.enrolled ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Remaining Seats</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {statsResult.remaining ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Capacity</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {statsResult.capacity ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Status</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {statsResult.status || "-"}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">
-              Course Availability
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <Label value="Course ID" />
-                <Select
-                  value={availabilityCourseId}
-                  onChange={(event) => setAvailabilityCourseId(event.target.value)}
-                >
-                  <option value="">Select a course</option>
-                  {statsSelectableCourses.map((course) => (
-                    <option key={course.courseId} value={course.courseId}>
-                      {course.courseId} - {course.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <Button onClick={handleGetAvailability} disabled={actionLoading.getAvailability}>
-                {actionLoading.getAvailability ? <Spinner size="sm" /> : "Check Availability"}
-              </Button>
-              {availabilityResult ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Available</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {availabilityResult.available ? "Yes" : "No"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Remaining Seats</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {availabilityResult.remainingSeats ?? 0}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </Card>
         </div>
 
         <Card>
@@ -883,6 +876,9 @@ const StaffCoursePage = () => {
                 <Table.HeadCell>Course ID</Table.HeadCell>
                 <Table.HeadCell>Name</Table.HeadCell>
                 <Table.HeadCell>Capacity</Table.HeadCell>
+                <Table.HeadCell>Year</Table.HeadCell>
+                <Table.HeadCell>Semester</Table.HeadCell>
+                <Table.HeadCell>LIC</Table.HeadCell>
                 <Table.HeadCell>Faculty</Table.HeadCell>
                 <Table.HeadCell>Status</Table.HeadCell>
               </Table.Head>
@@ -893,6 +889,9 @@ const StaffCoursePage = () => {
                       <Table.Cell>{course.courseId || "-"}</Table.Cell>
                       <Table.Cell>{course.name || "-"}</Table.Cell>
                       <Table.Cell>{course.capacity ?? "-"}</Table.Cell>
+                      <Table.Cell>{course.year ?? "-"}</Table.Cell>
+                      <Table.Cell>{course.semester ?? "-"}</Table.Cell>
+                      <Table.Cell>{course.lic || "-"}</Table.Cell>
                       <Table.Cell>
                         {course.faculty ? facultyLabelMap[course.faculty] || course.faculty : "-"}
                       </Table.Cell>
@@ -905,7 +904,7 @@ const StaffCoursePage = () => {
                   ))
                 ) : (
                   <Table.Row>
-                    <Table.Cell colSpan={5} className="text-center text-slate-500">
+                    <Table.Cell colSpan={8} className="text-center text-slate-500">
                       No course data loaded for this faculty yet.
                     </Table.Cell>
                   </Table.Row>
@@ -915,14 +914,6 @@ const StaffCoursePage = () => {
           </div>
         </Card>
 
-        <Card>
-          <h2 className="mb-3 text-xl font-bold text-slate-900 dark:text-white">
-            Raw API Response
-          </h2>
-          <pre className="max-h-80 overflow-auto rounded-xl bg-slate-900 p-4 text-xs text-slate-100">
-            {responseData ? JSON.stringify(responseData, null, 2) : "No response yet."}
-          </pre>
-        </Card>
       </div>
     </div>
   );
