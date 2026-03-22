@@ -101,6 +101,8 @@ jobs:
         with:
           appSourcePath: ${{ github.workspace }}/${{ matrix.working_directory }}
           acrName: ${{ env.AZURE_CONTAINER_REGISTRY }}
+          acrUsername: ${{ secrets.AZURE_ACR_USERNAME }}
+          acrPassword: ${{ secrets.AZURE_ACR_PASSWORD }}
           containerAppName: ${{ matrix.container_app_name }}
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppEnvironment: ${{ env.AZURE_CONTAINERAPPS_ENV }}
