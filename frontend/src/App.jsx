@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import Header from "./components/Header"
+import Header from "./components/Header";
 import SideNav from "./components/SideNav";
 import HomePage from "./Pages/HomePage";
 import FooterComponent from "./components/FooterComponent";
@@ -50,21 +50,21 @@ const App = () => {
                   <Route path="/dashboard/staff/course" element={<Component />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
                   <Route
-            path="/library"
-            element={
-              <ProtectedRoute>
-                <LibraryDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/fines"
-            element={
-              <ProtectedRoute>
-                <FineDashboard />
-              </ProtectedRoute>
-            }
-          />
+                    path="/library"
+                    element={
+                      <ProtectedRoute>
+                        <LibraryDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/fines"
+                    element={
+                      <ProtectedRoute>
+                        <FineDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </main>
             </div>
@@ -84,28 +84,29 @@ const App = () => {
                 <Route path="/dashboard/staff/course" element={<Component />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
                 <Route
-            path="/library"
-            element={
-              <ProtectedRoute>
-                <LibraryDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/fines"
-            element={
-              <ProtectedRoute>
-                <FineDashboard />
-              </ProtectedRoute>
-            }
-          />
+                  path="/library"
+                  element={
+                    <ProtectedRoute>
+                      <LibraryDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/fines"
+                  element={
+                    <ProtectedRoute>
+                      <FineDashboard />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </div>
             <FooterComponent />
           </>
         )}
+      </div>
     </Router>
-  )
-}
+  );
+};
 
-export default App
+export default App;
