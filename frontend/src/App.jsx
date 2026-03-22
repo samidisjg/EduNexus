@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import Header from "./components/Header"
+import Header from "./components/Header";
 import SideNav from "./components/SideNav";
 import HomePage from "./Pages/HomePage";
 import FooterComponent from "./components/FooterComponent";
@@ -10,6 +10,9 @@ import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
 import StudentServicePage from "./Pages/StudentServicePage";
 import StaffCoursePage from "./Pages/StaffCoursePage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LibraryDashboard from "./Pages/IT22577160/LibraryDashboard";
+import FineDashboard from "./Pages/IT22607232/FineDashboard";
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -48,6 +51,22 @@ const App = () => {
                   <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
                   <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
+                  <Route
+                    path="/library"
+                    element={
+                      <ProtectedRoute>
+                        <LibraryDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/fines"
+                    element={
+                      <ProtectedRoute>
+                        <FineDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </main>
             </div>
@@ -67,6 +86,22 @@ const App = () => {
                 <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
                 <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
+                <Route
+                  path="/library"
+                  element={
+                    <ProtectedRoute>
+                      <LibraryDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/fines"
+                  element={
+                    <ProtectedRoute>
+                      <FineDashboard />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </div>
             <FooterComponent />
@@ -74,7 +109,7 @@ const App = () => {
         )}
       </div>
     </Router>
-  )
-}
+  );
+};
 
-export default App
+export default App;
