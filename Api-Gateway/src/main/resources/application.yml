@@ -1,44 +1,46 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 user:
   service:
-    url: http://localhost:9091/user-service
+    url: ${USER_SERVICE_URL:http://localhost:9091/user-service}
 
 spring:
+  application:
+    name: api-gateway
   cloud:
     gateway:
       routes:
         - id: user-service
-          uri: http://localhost:9091
+          uri: ${USER_SERVICE_ROUTE_URI:http://localhost:9091}
           predicates:
             - Path=/api-gateway/user-service/**
           filters:
             - StripPrefix=1
 
         - id: student-service
-          uri: http://localhost:9095
+          uri: ${STUDENT_SERVICE_ROUTE_URI:http://localhost:9095}
           predicates:
             - Path=/api-gateway/students-service/**
           filters:
             - StripPrefix=1
 
         - id: course-service
-          uri: http://localhost:9096
+          uri: ${COURSE_SERVICE_ROUTE_URI:http://localhost:9096}
           predicates:
             - Path=/api-gateway/course-service/**
           filters:
             - StripPrefix=1
 
         - id: library-service
-          uri: http://localhost:8083
+          uri: ${LIBRARY_SERVICE_ROUTE_URI:http://localhost:8083}
           predicates:
             - Path=/api-gateway/library-service/**
           filters:
             - StripPrefix=1
 
         - id: fine-service
-          uri: http://localhost:8084
+          uri: ${FINE_SERVICE_ROUTE_URI:http://localhost:8084}
           predicates:
             - Path=/api-gateway/fine-service/**
           filters:
@@ -52,3 +54,9 @@ spring:
 
   main:
     web-application-type: reactive
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
