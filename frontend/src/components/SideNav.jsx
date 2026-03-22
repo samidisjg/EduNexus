@@ -47,8 +47,6 @@ const dashboardSections = [
           { to: "/dashboard/staff/course/FOA", label: "FOA", icon: FaBook },
         ],
       },
-      { to: "/dashboard/staff/library", label: "Library", icon: FaSchool },
-      { to: "/dashboard/staff/course", label: "Course", icon: FaBook },
       { to: "/library", label: "Library", icon: FaSchool },
       { to: "/fines", label: "Fines", icon: FaMoneyBillWave },
     ],
