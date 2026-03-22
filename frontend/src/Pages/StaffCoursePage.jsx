@@ -6,16 +6,17 @@ import {
   Button,
   Card,
   Label,
+  Modal,
+  Select,
   Spinner,
   Table,
   TextInput,
-  Select,
+  Tooltip,
 } from "flowbite-react";
 import {
   FaArrowLeft,
   FaBookOpen,
   FaChartLine,
-  FaClipboardList,
   FaEdit,
   FaLayerGroup,
   FaPlusCircle,
@@ -23,6 +24,7 @@ import {
   FaSignal,
   FaUniversity,
 } from "react-icons/fa";
+import { LuFilter, LuRefreshCcw, LuSearch, LuView, LuX } from "react-icons/lu";
 import courseService from "../services/course.service";
 
 const facultyOptions = [
@@ -126,6 +128,52 @@ const initialStatusForm = {
   status: "ACTIVE",
 };
 
+const SummaryCard = ({ title, value, subtitle, icon: Icon }) => (
+  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
+        <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+        <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
+      </div>
+      <div className="rounded-xl bg-slate-50 p-2 text-slate-700 shadow-inner dark:bg-slate-800 dark:text-slate-200">
+        <Icon size={18} />
+      </div>
+    </div>
+  </div>
+);
+
+const CourseTableSkeleton = () => (
+  <div className="space-y-3">
+    {[...Array(6)].map((_, rowIndex) => (
+      <div key={rowIndex} className="grid grid-cols-9 gap-3">
+        {[...Array(9)].map((__, cellIndex) => (
+          <div
+            key={`${rowIndex}-${cellIndex}`}
+            className="h-9 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-700/70"
+          />
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
+const formatCourseOption = (course) => {
+  const bits = [course.courseId, course.name].filter(Boolean);
+  const academic = [];
+
+  if (course.year) academic.push(`Y${course.year}`);
+  if (course.semester) academic.push(`S${course.semester}`);
+
+  if (academic.length > 0) {
+    bits.push(`(${academic.join(" ")})`);
+  }
+
+  return bits.join(" - ").replace(" - (", " (");
+};
+
+const getStatusTone = (status) => (status === "ACTIVE" ? "success" : "warning");
+
 const StaffCoursePage = () => {
   const navigate = useNavigate();
   const { facultyCode } = useParams();
@@ -143,6 +191,11 @@ const StaffCoursePage = () => {
   const [statusForm, setStatusForm] = useState(initialStatusForm);
   const [selectedCourseResult, setSelectedCourseResult] = useState(null);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showCapacityModal, setShowCapacityModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+
   const setLoading = (key, value) => {
     setActionLoading((prev) => ({ ...prev, [key]: value }));
   };
@@ -154,7 +207,9 @@ const StaffCoursePage = () => {
 
     try {
       const response = await fn();
-      setSuccess(successMessage);
+      if (successMessage) {
+        setSuccess(successMessage);
+      }
       return response;
     } catch (actionError) {
       setError(actionError.message || "Request failed.");
@@ -184,11 +239,11 @@ const StaffCoursePage = () => {
     });
   };
 
-  const handleLoadCourses = async () => {
+  const handleLoadCourses = async (silent = false) => {
     const response = await runAction(
       "listCourses",
       () => courseService.getCourses(),
-      "Course list loaded."
+      silent ? "" : "Course list refreshed."
     );
 
     if (response) {
@@ -197,7 +252,7 @@ const StaffCoursePage = () => {
   };
 
   useEffect(() => {
-    handleLoadCourses();
+    handleLoadCourses(true);
   }, []);
 
   useEffect(() => {
@@ -226,6 +281,8 @@ const StaffCoursePage = () => {
           ...courseForm,
           faculty: selectedFaculty || courseForm.faculty,
           capacity: Number(courseForm.capacity),
+          year: Number(courseForm.year),
+          semester: Number(courseForm.semester),
         }),
       "Course created successfully."
     );
@@ -233,16 +290,17 @@ const StaffCoursePage = () => {
     if (response) {
       upsertCourse(response);
       setCourseForm(buildInitialCourseForm(selectedFaculty || "FOC"));
+      setShowCreateModal(false);
     }
   };
 
-  const handleGetCourseById = async () => {
-    if (!courseIdLookup.trim()) {
+  const handleGetCourseById = async (courseIdArg = courseIdLookup, openModal = true) => {
+    if (!courseIdArg.trim()) {
       setError("Course ID is required.");
       return;
     }
 
-    const courseId = courseIdLookup.trim();
+    const courseId = courseIdArg.trim();
     const response = await runAction(
       "getCourseById",
       async () => {
@@ -254,12 +312,16 @@ const StaffCoursePage = () => {
 
         return { course, stats, availability };
       },
-      "Course fetched successfully."
+      "Course details loaded."
     );
 
     if (response) {
       upsertCourse(response.course);
       setSelectedCourseResult(response);
+      setCourseIdLookup(courseId);
+      if (openModal) {
+        setShowDetailsModal(true);
+      }
     }
   };
 
@@ -284,6 +346,7 @@ const StaffCoursePage = () => {
     if (response) {
       upsertCourse(response);
       setCapacityForm(initialCapacityForm);
+      setShowCapacityModal(false);
     }
   };
 
@@ -308,6 +371,7 @@ const StaffCoursePage = () => {
     if (response) {
       upsertCourse(response);
       setStatusForm(initialStatusForm);
+      setShowStatusModal(false);
     }
   };
 
@@ -349,7 +413,7 @@ const StaffCoursePage = () => {
       .some((value) => `${value}`.toLowerCase().includes(keyword));
   });
 
-  const statsSelectableCourses = [...visibleCourses].sort((left, right) =>
+  const selectableCourses = [...visibleCourses].sort((left, right) =>
     (left.courseId || "").localeCompare(right.courseId || "")
   );
 
@@ -360,361 +424,298 @@ const StaffCoursePage = () => {
   );
   const activeCourses = courses.filter((course) => course.status === "ACTIVE").length;
   const inactiveCourses = courses.filter((course) => course.status === "INACTIVE").length;
+  const isListLoading = Boolean(actionLoading.listCourses);
+
+  const openCapacityModal = (course) => {
+    setCapacityForm({
+      courseId: course.courseId || "",
+      capacity: Number(course.capacity || 0),
+    });
+    setShowCapacityModal(true);
+  };
+
+  const openStatusModal = (course) => {
+    setStatusForm({
+      courseId: course.courseId || "",
+      status: course.status || "ACTIVE",
+    });
+    setShowStatusModal(true);
+  };
 
   if (!selectedFaculty) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-cyan-50 px-4 py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-        {success ? (
-          <div className="fixed right-4 top-24 z-50 w-full max-w-sm">
-            <Alert color="success" className="shadow-lg">
-              {success}
-            </Alert>
-          </div>
-        ) : null}
+      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-600 dark:text-cyan-300">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600">
+                  <FaUniversity size={12} />
                   Staff Course Desk
-                </p>
-                <h1 className="mt-1 text-3xl font-extrabold text-slate-900 dark:text-white">
-                  All Programs
-                </h1>
-                <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-                  Start from a faculty overview, compare course load and seating capacity, then
-                  open the faculty workspace for direct course management.
+                </div>
+                <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white md:text-4xl">All Programs</h1>
+                <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300 md:text-base">
+                  Review program coverage, compare faculty capacity, and open a faculty workspace for direct course operations.
                 </p>
               </div>
-              <Badge color="info" className="px-3 py-1">
-                5 FACULTIES
-              </Badge>
+              <Button color="light" onClick={() => handleLoadCourses(false)} disabled={isListLoading} className="rounded-xl px-5 py-2.5 font-semibold">
+                {isListLoading ? <Spinner size="sm" /> : <><LuRefreshCcw className="mr-2" />Refresh</>}
+              </Button>
             </div>
 
-            {error ? <Alert color="failure" className="mt-4">{error}</Alert> : null}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card>
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
-                  <FaUniversity />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Faculties</p>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {facultyOptions.length}
-                  </h2>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  <FaLayerGroup />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Courses</p>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{totalCourses}</h2>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-violet-100 p-3 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
-                  <FaChartLine />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Capacity</p>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{totalCapacity}</h2>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                  <FaSignal />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Active Courses</p>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{activeCourses}</h2>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">{inactiveCourses} inactive</p>
-                </div>
-              </div>
-            </Card>
-          </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <SummaryCard title="Faculties" value={facultyOptions.length} subtitle="Programs available in navigation" icon={FaUniversity} />
+              <SummaryCard title="Total Courses" value={totalCourses} subtitle="Across all faculties" icon={FaLayerGroup} />
+              <SummaryCard title="Seat Capacity" value={totalCapacity} subtitle="Combined course intake" icon={FaChartLine} />
+              <SummaryCard title="Active Courses" value={activeCourses} subtitle={`${inactiveCourses} inactive courses`} icon={FaSignal} />
+            </div>
+          </section>
 
           <div className="grid gap-6 xl:grid-cols-2">
             {coursesByFaculty.map((faculty) => (
-              <Card key={faculty.value} className="border border-slate-200 dark:border-slate-700">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300">
-                      {faculty.value}
-                    </p>
-                    <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
-                      {faculty.label.replace(`${faculty.value} - `, "")}
-                    </h2>
+              <Card key={faculty.value} className="overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm dark:border-slate-700">
+                <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-5 dark:from-slate-900 dark:to-slate-900">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300">{faculty.value}</p>
+                      <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+                        {faculty.label.replace(`${faculty.value} - `, "")}
+                      </h2>
+                    </div>
+                    <Badge color="info" className="px-3 py-1">{faculty.courseCount} Courses</Badge>
                   </div>
-                  <Badge color="info">{faculty.courseCount} Courses</Badge>
-                </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Seating Capacity</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {faculty.totalSeats}
-                    </p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Seats</p>
+                      <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{faculty.totalSeats}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Active</p>
+                      <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{faculty.activeCount}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Inactive</p>
+                      <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{faculty.courseCount - faculty.activeCount}</p>
+                    </div>
                   </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Active Courses</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                      {faculty.activeCount}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Open the faculty course desk to manage courses directly.
-                  </p>
-                  <Button onClick={() => navigate(`/dashboard/staff/course/${faculty.value}`)}>
-                    Open {faculty.value}
-                  </Button>
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Open the faculty workspace to create, inspect, and update courses.
+                    </p>
+                    <Button onClick={() => navigate(`/dashboard/staff/course/${faculty.value}`)} color="light">
+                      Open {faculty.value}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
           </div>
+        </div>
 
-          <Card>
-            <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">
-              All Programs Capacity Table
-            </h2>
-            <div className="overflow-x-auto">
-              <Table hoverable>
-                <Table.Head>
-                  <Table.HeadCell>Faculty</Table.HeadCell>
-                  <Table.HeadCell>Courses</Table.HeadCell>
-                  <Table.HeadCell>Active Courses</Table.HeadCell>
-                  <Table.HeadCell>Total Capacity</Table.HeadCell>
-                  <Table.HeadCell>Open</Table.HeadCell>
-                </Table.Head>
-                <Table.Body className="divide-y">
-                  {coursesByFaculty.map((faculty) => (
-                    <Table.Row key={faculty.value}>
-                      <Table.Cell>{faculty.label}</Table.Cell>
-                      <Table.Cell>{faculty.courseCount}</Table.Cell>
-                      <Table.Cell>{faculty.activeCount}</Table.Cell>
-                      <Table.Cell>{faculty.totalSeats}</Table.Cell>
-                      <Table.Cell>
-                        <Button size="xs" onClick={() => navigate(`/dashboard/staff/course/${faculty.value}`)}>
-                          View Faculty
-                        </Button>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table>
-            </div>
-          </Card>
+        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+          {error ? (
+            <Alert color="failure">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm">{error}</span>
+                <button type="button" onClick={() => setError("")} aria-label="Close Error">
+                  <LuX />
+                </button>
+              </div>
+            </Alert>
+          ) : null}
+          {success ? (
+            <Alert color="success">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm">{success}</span>
+                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
+                  <LuX />
+                </button>
+              </div>
+            </Alert>
+          ) : null}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-cyan-50 px-4 py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-      {success ? (
-        <div className="fixed right-4 top-24 z-50 w-full max-w-sm">
-          <Alert color="success" className="shadow-lg">
-            {success}
-          </Alert>
-        </div>
-      ) : null}
+    <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <Button color="light" onClick={() => navigate("/dashboard/staff/course")}>
+              <Button color="light" onClick={() => navigate("/dashboard/staff/course")} className="rounded-xl px-4 py-2 font-semibold">
                 <FaArrowLeft className="mr-2" />
                 Back To All Programs
               </Button>
-              <p className="mt-4 text-sm font-semibold uppercase tracking-[0.25em] text-cyan-600 dark:text-cyan-300">
-                {selectedFaculty}
-              </p>
-              <h1 className="mt-1 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {facultyLabelMap[selectedFaculty]}
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-                Manage courses within this faculty workspace. Course creation is pinned to the
-                selected faculty.
+              <div className="mt-4 mb-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600">
+                <FaBookOpen size={12} />
+                Faculty Workspace
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white md:text-4xl">{facultyLabelMap[selectedFaculty]}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300 md:text-base">
+                Manage the course catalog for this faculty with a cleaner dashboard flow, modal-driven edits, and a single records table.
               </p>
             </div>
-            <Badge color="info" className="px-3 py-1">
-              FACULTY WORKSPACE
-            </Badge>
+            <div className="flex flex-wrap gap-2">
+              <Button color="light" onClick={() => setShowCreateModal(true)} className="rounded-xl font-semibold">
+                <FaPlusCircle className="mr-2" />
+                Add Course
+              </Button>
+              <Button color="light" onClick={() => handleLoadCourses(false)} disabled={isListLoading} className="rounded-xl font-semibold">
+                {isListLoading ? <Spinner size="sm" /> : <><LuRefreshCcw className="mr-2" />Refresh</>}
+              </Button>
+            </div>
           </div>
 
-          {error ? <Alert color="failure" className="mt-4">{error}</Alert> : null}
-        </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SummaryCard title="Faculty Courses" value={visibleCourses.length} subtitle="Visible in this workspace" icon={FaLayerGroup} />
+            <SummaryCard title="Active Courses" value={visibleCourses.filter((course) => course.status === "ACTIVE").length} subtitle="Ready for enrollment" icon={FaSignal} />
+            <SummaryCard title="Inactive Courses" value={visibleCourses.filter((course) => course.status === "INACTIVE").length} subtitle="Currently closed" icon={FaEdit} />
+            <SummaryCard title="Seat Capacity" value={visibleCourses.reduce((total, course) => total + Number(course.capacity || 0), 0)} subtitle="Combined faculty intake" icon={FaChartLine} />
+          </div>
+        </section>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
-                <FaLayerGroup />
+        <Card className="overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm dark:border-slate-700">
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-5 dark:from-slate-900 dark:to-slate-900">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="rounded-lg bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <LuFilter size={16} />
               </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Faculty Courses</p>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{visibleCourses.length}</h2>
-              </div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Course Tools</h2>
             </div>
-          </Card>
 
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                <FaSignal />
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto]">
+              <div>
+                <Label value="Search Courses" />
+                <TextInput
+                  icon={LuSearch}
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search by ID, name, LIC, year, semester, or status"
+                />
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Active Courses</p>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {visibleCourses.filter((course) => course.status === "ACTIVE").length}
-                </h2>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                <FaClipboardList />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Inactive Courses</p>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {visibleCourses.filter((course) => course.status === "INACTIVE").length}
-                </h2>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-violet-100 p-3 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
-                <FaChartLine />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Faculty Capacity</p>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {visibleCourses.reduce((total, course) => total + Number(course.capacity || 0), 0)}
-                </h2>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaBookOpen /> Course Details
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <Label value="Course ID" />
-                <Select
-                  value={courseIdLookup}
-                  onChange={(event) => setCourseIdLookup(event.target.value)}
-                >
+                <Label value="Course Details" />
+                <Select value={courseIdLookup} onChange={(event) => setCourseIdLookup(event.target.value)}>
                   <option value="">Select a course</option>
-                  {statsSelectableCourses.map((course) => (
+                  {selectableCourses.map((course) => (
                     <option key={course.courseId} value={course.courseId}>
-                      {course.courseId} - {course.name} (Y{course.year} S{course.semester})
+                      {formatCourseOption(course)}
                     </option>
                   ))}
                 </Select>
               </div>
-              <Button onClick={handleGetCourseById} disabled={actionLoading.getCourseById}>
-                {actionLoading.getCourseById ? <Spinner size="sm" /> : "Fetch Course"}
-              </Button>
-              {selectedCourseResult ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Course Name</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.course?.name || "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Capacity</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.course?.capacity ?? "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Year / Semester</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      Y{selectedCourseResult.course?.year ?? "-"} S{selectedCourseResult.course?.semester ?? "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">LIC</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.course?.lic || "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Faculty</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.course?.faculty
-                        ? facultyLabelMap[selectedCourseResult.course.faculty] || selectedCourseResult.course.faculty
-                        : "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Status</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.course?.status || "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Enrolled</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.stats?.enrolled ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Remaining Seats</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.stats?.remaining ?? selectedCourseResult.availability?.remainingSeats ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Availability</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCourseResult.availability?.available ? "Available" : "Unavailable"}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
+              <div className="flex items-end gap-2">
+                <Tooltip content="View Course Details">
+                  <Button
+                    color="light"
+                    onClick={() => handleGetCourseById()}
+                    disabled={actionLoading.getCourseById || !courseIdLookup}
+                    aria-label="View Course Details"
+                  >
+                    {actionLoading.getCourseById ? <Spinner size="sm" /> : <LuView />}
+                  </Button>
+                </Tooltip>
+              </div>
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          <Card className="lg:col-span-2">
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaPlusCircle /> Create Course In {selectedFaculty}
-            </h2>
-            <form onSubmit={handleCreateCourse} className="grid gap-3 md:grid-cols-4">
+        <Card className="overflow-hidden rounded-3xl border border-slate-200/80 shadow-lg dark:border-slate-700">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Course Records</h3>
+              <p className="text-sm text-slate-500">
+                Showing {filteredCourses.length} of {visibleCourses.length} courses in {selectedFaculty}
+              </p>
+            </div>
+            <Badge color="info" className="px-3 py-1">{selectedFaculty}</Badge>
+          </div>
+
+          {isListLoading && visibleCourses.length === 0 ? (
+            <CourseTableSkeleton />
+          ) : filteredCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-14 text-center dark:border-slate-600 dark:bg-slate-800/40">
+              <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-200">
+                <FaSearch size={24} />
+              </div>
+              <p className="mt-4 text-lg font-semibold text-slate-800 dark:text-slate-100">No courses match the current view</p>
+              <p className="mt-1 text-sm text-slate-500">Try another search term or create a new course for this faculty.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+              <Table hoverable>
+                <Table.Head className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                  <Table.HeadCell>Course ID</Table.HeadCell>
+                  <Table.HeadCell>Name</Table.HeadCell>
+                  <Table.HeadCell>Year / Sem</Table.HeadCell>
+                  <Table.HeadCell>LIC</Table.HeadCell>
+                  <Table.HeadCell>Capacity</Table.HeadCell>
+                  <Table.HeadCell>Status</Table.HeadCell>
+                  <Table.HeadCell>Actions</Table.HeadCell>
+                </Table.Head>
+                <Table.Body className="divide-y">
+                  {filteredCourses.map((course, index) => (
+                    <Table.Row key={course.courseId || index} className="bg-white even:bg-slate-50/60 hover:bg-cyan-50/50 dark:bg-slate-900 dark:even:bg-slate-800/70 dark:hover:bg-slate-800">
+                      <Table.Cell className="font-semibold text-slate-800 dark:text-slate-100">{course.courseId || "-"}</Table.Cell>
+                      <Table.Cell>
+                        <div>
+                          <p className="font-medium text-slate-800 dark:text-slate-100">{course.name || "-"}</p>
+                          <p className="text-xs text-slate-500">{facultyLabelMap[course.faculty] || course.faculty || "-"}</p>
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge color="purple">Y{course.year ?? "-"} S{course.semester ?? "-"}</Badge>
+                      </Table.Cell>
+                      <Table.Cell className="text-slate-600">{course.lic || "-"}</Table.Cell>
+                      <Table.Cell>{course.capacity ?? "-"}</Table.Cell>
+                      <Table.Cell>
+                        <Badge color={getStatusTone(course.status)}>{course.status || "-"}</Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex items-center gap-2">
+                          <Tooltip content="View Details">
+                            <Button
+                              size="xs"
+                              color="light"
+                              onClick={() => handleGetCourseById(course.courseId, true)}
+                              disabled={actionLoading.getCourseById}
+                            >
+                              <LuView />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip content="Update Capacity">
+                            <Button size="xs" color="light" onClick={() => openCapacityModal(course)}>
+                              <FaChartLine />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip content="Update Status">
+                            <Button size="xs" color="light" onClick={() => openStatusModal(course)}>
+                              <FaSignal />
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+            </div>
+          )}
+        </Card>
+
+        <Modal show={showCreateModal} size="5xl" onClose={() => setShowCreateModal(false)}>
+          <Modal.Header>Create Course In {selectedFaculty}</Modal.Header>
+          <Modal.Body>
+            <form onSubmit={handleCreateCourse} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div>
                 <Label value="Course ID" />
                 <TextInput
                   value={courseForm.courseId}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, courseId: event.target.value }))
-                  }
+                  onChange={(event) => setCourseForm((prev) => ({ ...prev, courseId: event.target.value }))}
                   placeholder="CS105"
                   required
                 />
@@ -723,9 +724,7 @@ const StaffCoursePage = () => {
                 <Label value="Course Name" />
                 <TextInput
                   value={courseForm.name}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, name: event.target.value }))
-                  }
+                  onChange={(event) => setCourseForm((prev) => ({ ...prev, name: event.target.value }))}
                   placeholder="Software Engineering"
                   required
                 />
@@ -736,9 +735,7 @@ const StaffCoursePage = () => {
                   type="number"
                   min={0}
                   value={courseForm.capacity}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, capacity: event.target.value }))
-                  }
+                  onChange={(event) => setCourseForm((prev) => ({ ...prev, capacity: event.target.value }))}
                   required
                 />
               </div>
@@ -748,12 +745,7 @@ const StaffCoursePage = () => {
               </div>
               <div>
                 <Label value="Year" />
-                <Select
-                  value={courseForm.year}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, year: event.target.value }))
-                  }
-                >
+                <Select value={courseForm.year} onChange={(event) => setCourseForm((prev) => ({ ...prev, year: event.target.value }))}>
                   <option value={1}>Year 1</option>
                   <option value={2}>Year 2</option>
                   <option value={3}>Year 3</option>
@@ -762,12 +754,7 @@ const StaffCoursePage = () => {
               </div>
               <div>
                 <Label value="Semester" />
-                <Select
-                  value={courseForm.semester}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, semester: event.target.value }))
-                  }
-                >
+                <Select value={courseForm.semester} onChange={(event) => setCourseForm((prev) => ({ ...prev, semester: event.target.value }))}>
                   <option value={1}>Semester 1</option>
                   <option value={2}>Semester 2</option>
                 </Select>
@@ -776,36 +763,83 @@ const StaffCoursePage = () => {
                 <Label value="LIC" />
                 <TextInput
                   value={courseForm.lic}
-                  onChange={(event) =>
-                    setCourseForm((prev) => ({ ...prev, lic: event.target.value }))
-                  }
+                  onChange={(event) => setCourseForm((prev) => ({ ...prev, lic: event.target.value }))}
                   placeholder="Dr. Silva"
                   required
                 />
               </div>
-              <div className="md:col-span-4">
-                <Button type="submit" disabled={actionLoading.createCourse}>
-                  {actionLoading.createCourse ? <Spinner size="sm" /> : "Create Course"}
+              <div className="md:col-span-2 xl:col-span-4">
+                <Button type="submit" color="light" disabled={actionLoading.createCourse}>
+                  {actionLoading.createCourse ? <Spinner size="sm" /> : <><FaPlusCircle className="mr-2" />Create Course</>}
                 </Button>
               </div>
             </form>
-          </Card>
+          </Modal.Body>
+        </Modal>
 
-          <Card>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaEdit /> Update Capacity
-            </h2>
+        <Modal show={showDetailsModal} size="5xl" onClose={() => setShowDetailsModal(false)}>
+          <Modal.Header>Course Details</Modal.Header>
+          <Modal.Body>
+            {selectedCourseResult ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Course ID</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourseResult.course?.courseId || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Course Name</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourseResult.course?.name || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Status</p>
+                  <p className="mt-1"><Badge color={getStatusTone(selectedCourseResult.course?.status)}>{selectedCourseResult.course?.status || "-"}</Badge></p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Capacity</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourseResult.course?.capacity ?? "-"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Year / Semester</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Y{selectedCourseResult.course?.year ?? "-"} S{selectedCourseResult.course?.semester ?? "-"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">LIC</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourseResult.course?.lic || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Faculty</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedCourseResult.course?.faculty ? facultyLabelMap[selectedCourseResult.course.faculty] || selectedCourseResult.course.faculty : "-"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Enrolled</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourseResult.stats?.enrolled ?? 0}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Remaining Seats</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedCourseResult.stats?.remaining ?? selectedCourseResult.availability?.remainingSeats ?? 0}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700 md:col-span-2 xl:col-span-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Availability</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedCourseResult.availability?.available ? "Available for enrollment" : "Unavailable for enrollment"}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </Modal.Body>
+        </Modal>
+
+        <Modal show={showCapacityModal} size="3xl" onClose={() => setShowCapacityModal(false)}>
+          <Modal.Header>Update Course Capacity</Modal.Header>
+          <Modal.Body>
             <form onSubmit={handleUpdateCapacity} className="space-y-3">
               <div>
                 <Label value="Course ID" />
-                <TextInput
-                  value={capacityForm.courseId}
-                  onChange={(event) =>
-                    setCapacityForm((prev) => ({ ...prev, courseId: event.target.value }))
-                  }
-                  placeholder="CS105"
-                  required
-                />
+                <TextInput value={capacityForm.courseId} readOnly />
               </div>
               <div>
                 <Label value="New Capacity" />
@@ -813,107 +847,61 @@ const StaffCoursePage = () => {
                   type="number"
                   min={0}
                   value={capacityForm.capacity}
-                  onChange={(event) =>
-                    setCapacityForm((prev) => ({ ...prev, capacity: event.target.value }))
-                  }
+                  onChange={(event) => setCapacityForm((prev) => ({ ...prev, capacity: event.target.value }))}
                   required
                 />
               </div>
-              <Button type="submit" disabled={actionLoading.updateCapacity}>
-                {actionLoading.updateCapacity ? <Spinner size="sm" /> : "Save Capacity"}
+              <Button type="submit" color="light" disabled={actionLoading.updateCapacity}>
+                {actionLoading.updateCapacity ? <Spinner size="sm" /> : <>Save Capacity</>}
               </Button>
             </form>
-          </Card>
+          </Modal.Body>
+        </Modal>
 
-          <Card>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
-              <FaSignal /> Update Status
-            </h2>
+        <Modal show={showStatusModal} size="3xl" onClose={() => setShowStatusModal(false)}>
+          <Modal.Header>Update Course Status</Modal.Header>
+          <Modal.Body>
             <form onSubmit={handleUpdateStatus} className="space-y-3">
               <div>
                 <Label value="Course ID" />
-                <TextInput
-                  value={statusForm.courseId}
-                  onChange={(event) =>
-                    setStatusForm((prev) => ({ ...prev, courseId: event.target.value }))
-                  }
-                  placeholder="CS105"
-                  required
-                />
+                <TextInput value={statusForm.courseId} readOnly />
               </div>
               <div>
                 <Label value="Status" />
-                <Select
-                  value={statusForm.status}
-                  onChange={(event) =>
-                    setStatusForm((prev) => ({ ...prev, status: event.target.value }))
-                  }
-                >
+                <Select value={statusForm.status} onChange={(event) => setStatusForm((prev) => ({ ...prev, status: event.target.value }))}>
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="INACTIVE">INACTIVE</option>
                 </Select>
               </div>
-              <Button type="submit" disabled={actionLoading.updateStatus}>
-                {actionLoading.updateStatus ? <Spinner size="sm" /> : "Save Status"}
+              <Button type="submit" color="light" disabled={actionLoading.updateStatus}>
+                {actionLoading.updateStatus ? <Spinner size="sm" /> : <>Save Status</>}
               </Button>
             </form>
-          </Card>
+          </Modal.Body>
+        </Modal>
 
+        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+          {error ? (
+            <Alert color="failure">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm">{error}</span>
+                <button type="button" onClick={() => setError("")} aria-label="Close Error">
+                  <LuX />
+                </button>
+              </div>
+            </Alert>
+          ) : null}
+          {success ? (
+            <Alert color="success">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm">{success}</span>
+                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
+                  <LuX />
+                </button>
+              </div>
+            </Alert>
+          ) : null}
         </div>
-
-        <Card>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {selectedFaculty} Courses Table
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {filteredCourses.length} visible course{filteredCourses.length === 1 ? "" : "s"}
-            </p>
-          </div>
-          <div className="overflow-x-auto">
-            <Table hoverable>
-              <Table.Head>
-                <Table.HeadCell>Course ID</Table.HeadCell>
-                <Table.HeadCell>Name</Table.HeadCell>
-                <Table.HeadCell>Capacity</Table.HeadCell>
-                <Table.HeadCell>Year</Table.HeadCell>
-                <Table.HeadCell>Semester</Table.HeadCell>
-                <Table.HeadCell>LIC</Table.HeadCell>
-                <Table.HeadCell>Faculty</Table.HeadCell>
-                <Table.HeadCell>Status</Table.HeadCell>
-              </Table.Head>
-              <Table.Body className="divide-y">
-                {filteredCourses.length > 0 ? (
-                  filteredCourses.map((course, index) => (
-                    <Table.Row key={course.courseId || index}>
-                      <Table.Cell>{course.courseId || "-"}</Table.Cell>
-                      <Table.Cell>{course.name || "-"}</Table.Cell>
-                      <Table.Cell>{course.capacity ?? "-"}</Table.Cell>
-                      <Table.Cell>{course.year ?? "-"}</Table.Cell>
-                      <Table.Cell>{course.semester ?? "-"}</Table.Cell>
-                      <Table.Cell>{course.lic || "-"}</Table.Cell>
-                      <Table.Cell>
-                        {course.faculty ? facultyLabelMap[course.faculty] || course.faculty : "-"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge color={course.status === "ACTIVE" ? "success" : "warning"}>
-                          {course.status || "-"}
-                        </Badge>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={8} className="text-center text-slate-500">
-                      No course data loaded for this faculty yet.
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table>
-          </div>
-        </Card>
-
       </div>
     </div>
   );
