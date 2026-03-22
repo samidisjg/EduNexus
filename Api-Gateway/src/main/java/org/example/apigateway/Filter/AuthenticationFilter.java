@@ -32,6 +32,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class AuthenticationFilter implements GlobalFilter, Ordered {
+    private static final String GATEWAY_HEADER = "X-GATEWAY-KEY";
 
     @Autowired
     private GatewayConfig gatewayConfig;
@@ -86,6 +87,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                             .header("X-User-Role", user.getData().getRole())
                             .header("X-User-Email", user.getData().getUserEmail())
                             .header("X-Username", user.getData().getUserName())
+                            .header(GATEWAY_HEADER, gatewayConfig.getApiKey())
                             .build();
 
                     // Log the URI that is being forwarded to the service
