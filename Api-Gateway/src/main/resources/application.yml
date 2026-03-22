@@ -30,9 +30,24 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: library-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api-gateway/library-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: fine-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api-gateway/fine-service/**
+          filters:
+            - StripPrefix=1
+
       open-endpoints:
         - /api-gateway/user-service/auth/sign-up
         - /api-gateway/user-service/auth/sign-in
+      api-key: ${GATEWAY_API_KEY:my-secret-gateway-key}
 
 
   main:
