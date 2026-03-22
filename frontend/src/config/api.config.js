@@ -7,6 +7,8 @@ export const API_CONFIG = {
   USER_SERVICE: 'http://localhost:8081/api-gateway/user-service',
   STUDENT_SERVICE: 'http://localhost:8081/api-gateway/students-service',
   COURSE_SERVICE: 'http://localhost:8081/api-gateway/course-service',
+  LIBRARY_SERVICE: 'http://localhost:8081/api-gateway/library-service',
+  FINE_SERVICE: 'http://localhost:8081/api-gateway/fine-service',
   
   // Timeout configuration
   TIMEOUT: 30000,

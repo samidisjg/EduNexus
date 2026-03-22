@@ -1,12 +1,24 @@
-import { Button, Navbar, TextInput, Dropdown, Avatar } from "flowbite-react";
-import { FaMoon, FaSun, FaGraduationCap } from "react-icons/fa";
+import PropTypes from "prop-types";
+import { Button, Navbar, TextInput, Dropdown, Avatar, Badge } from "flowbite-react";
+import { FaMoon, FaSun, FaGraduationCap, FaBars } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { AiOutlineSearch } from "react-icons/ai";
+import { HiLibrary, HiCash } from "react-icons/hi";
 import { signOutSuccess } from "../redux/user/userSlice";
+import authService from "../services/auth.service";
 
-const Header = () => {
+const getRoleLabel = (role) => {
+  if (!role) return "User";
+  return role
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+const Header = ({ onMenuToggle, showMenuButton = false }) => {
   const path = useLocation().pathname;
   const { theme } = useSelector((state) => state.theme);
   const { currentUser } = useSelector((state) => state.user);
@@ -14,18 +26,27 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    authService.signOut();
     dispatch(signOutSuccess());
     navigate("/sign-in");
   };
 
   return (
-    <Navbar className="border-b-2 sticky top-0 bg-slate-200 shadow-md z-40">
+    <Navbar className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
       <Link
         to="/"
         className="flex items-center gap-2 self-center whitespace-nowrap text-sm sm:text-xl font-bold dark:text-white group"
       >
+        {showMenuButton && (
+          <Button
+            color="gray"
+            pill
+            className="mr-2 lg:hidden"
+            onClick={onMenuToggle}
+          >
+            <FaBars />
+          </Button>
+        )}
         <FaGraduationCap className="text-2xl sm:text-3xl text-blue-600 dark:text-cyan-400 group-hover:rotate-12 transition-transform duration-300" />
         <div className="flex items-center">
           <span className="px-2 py-1 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-lg text-white shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
@@ -35,12 +56,12 @@ const Header = () => {
         </div>
       </Link>
 
-      <form>
+      <form className="hidden md:block">
         <TextInput
           type="text"
           placeholder="Search..."
           rightIcon={AiOutlineSearch}
-          className="hidden lg:inline"
+          className="lg:inline"
         />
       </form>
 
@@ -55,19 +76,32 @@ const Header = () => {
         </Button>
 
         {currentUser ? (
-          <Dropdown
-            arrowIcon={false}
-            inline
-            label={
-              <Avatar
-                alt="user"
-                img={
-                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1EbhMbqdCA85UXXAxxXvcc0PN9xvHOZF6yYVUVRAYSlQC_B9aPU-tEdU&s"
-                }
-                rounded
-              />
-            }
-          >
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+            <div className="hidden text-right lg:block">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                {currentUser.userName}
+              </p>
+              <div className="flex items-center justify-end gap-2">
+                <p className="max-w-44 truncate text-xs text-slate-500 dark:text-slate-400">
+                  {currentUser.userEmail || ""}
+                </p>
+                <Badge color="info">{getRoleLabel(currentUser.role)}</Badge>
+              </div>
+            </div>
+
+            <Dropdown
+              arrowIcon={false}
+              inline
+              label={
+                <Avatar
+                  alt="user"
+                  img={
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1EbhMbqdCA85UXXAxxXvcc0PN9xvHOZF6yYVUVRAYSlQC_B9aPU-tEdU&s"
+                  }
+                  rounded
+                />
+              }
+            >
             <Dropdown.Header>
               <span className="block text-sm font-medium">
                 {currentUser.userName}
@@ -75,12 +109,17 @@ const Header = () => {
               <span className="block truncate text-sm font-normal">
                 {currentUser.userEmail || ""}
               </span>
+              <span className="mt-1 block text-xs uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
+                {getRoleLabel(currentUser.role)}
+              </span>
             </Dropdown.Header>
             <Dropdown.Item>
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/">Dashboard</Link>
+              <Link to="/library">Library Portal</Link>
             </Dropdown.Item>
             <Dropdown.Item onClick={handleSignOut}>Sign Out</Dropdown.Item>
-          </Dropdown>
+            </Dropdown>
+          </div>
         ) : (
           <Link to="/sign-in">
             <Button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700" outline>
@@ -109,17 +148,32 @@ const Header = () => {
             Component
           </Link>
         </Navbar.Link>
-        <Navbar.Link active={path === "/dash-ride"} as={"div"}>
+        {/* <Navbar.Link active={path === "/library"} as={"div"}>
           <Link
-            to="/dash-ride"
-            className="text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
+            to="/library"
+            className="flex items-center gap-2 text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
           >
-            Dashboard
+            <HiLibrary className="text-lg" />
+            Library
           </Link>
         </Navbar.Link>
+        <Navbar.Link active={path === "/fines"} as={"div"}>
+          <Link
+            to="/fines"
+            className="flex items-center gap-2 text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
+          >
+            <HiCash className="text-lg" />
+            Fines
+          </Link>
+        </Navbar.Link> */}
       </Navbar.Collapse>
     </Navbar>
   );
+};
+
+Header.propTypes = {
+  onMenuToggle: PropTypes.func,
+  showMenuButton: PropTypes.bool,
 };
 
 export default Header;

@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { Button, Card } from 'flowbite-react';
 import { FaGraduationCap, FaUserGraduate, FaMoneyCheckAlt } from 'react-icons/fa';
 import { HiAcademicCap, HiBookOpen, HiLibrary } from 'react-icons/hi';
+import { useSelector } from 'react-redux';
 
 export default function HomePage() {
+  const { currentUser } = useSelector((state) => state.user);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Hero Section with Theme Support */}
@@ -98,6 +101,13 @@ export default function HomePage() {
                 <p className="text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-200 flex-grow">
                   Book management, borrow and return operations, and automated fine calculations
                 </p>
+                <div className="mt-6">
+                  <Link to={currentUser ? "/library" : "/sign-in"}>
+                    <Button className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700">
+                      Open Library Portal
+                    </Button>
+                  </Link>
+                </div>
               </Card>
             </div>
 
