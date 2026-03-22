@@ -1,13 +1,13 @@
 server:
-  port: ${SERVER_PORT:8083}
+  port: ${SERVER_PORT:8084}
   servlet:
-    context-path: /library-service
+    context-path: /fine-service
 
 spring:
   application:
-    name: library-service
+    name: fine-service
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:library_db}?useSSL=false&serverTimezone=Asia/Colombo&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:finedb}?useSSL=false&serverTimezone=Asia/Colombo&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:s2001}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -39,12 +39,9 @@ http:
     connect-timeout-ms: ${HTTP_CLIENT_CONNECT_TIMEOUT_MS:5000}
     response-timeout-seconds: ${HTTP_CLIENT_RESPONSE_TIMEOUT_SECONDS:10}
 
-fine:
+library:
   service:
-    base-url: ${FINE_SERVICE_BASE_URL:http://localhost:8084/fine-service}
-  overdue-sync:
-    initial-delay-ms: ${FINE_OVERDUE_SYNC_INITIAL_DELAY_MS:15000}
-    fixed-delay-ms: ${FINE_OVERDUE_SYNC_FIXED_DELAY_MS:60000}
+    base-url: ${LIBRARY_SERVICE_BASE_URL:http://localhost:8083/library-service}
 
 internal:
   api:
@@ -53,6 +50,10 @@ internal:
 gateway:
   api:
     key: ${GATEWAY_API_KEY:my-secret-gateway-key}
+
+fine:
+  amount:
+    per-day: ${FINE_AMOUNT_PER_DAY:100.00}
 
 springdoc:
   swagger-ui:

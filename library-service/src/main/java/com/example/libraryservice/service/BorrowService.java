@@ -43,9 +43,6 @@ public class BorrowService {
         }
 
         LocalDate borrowDate = request.getBorrowDate() != null ? request.getBorrowDate() : LocalDate.now();
-        if (request.getDueDate().isBefore(borrowDate)) {
-            throw new BadRequestException("Due date cannot be before borrow date");
-        }
 
         BorrowRecord borrowRecord = BorrowRecord.builder()
                 .bookId(book.getId())

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { AiOutlineSearch } from "react-icons/ai";
-import { HiLibrary } from "react-icons/hi";
+import { HiLibrary, HiCash } from "react-icons/hi";
 import { signOutSuccess } from "../redux/user/userSlice";
 import authService from "../services/auth.service";
 
@@ -117,6 +117,15 @@ const Header = () => {
           >
             <HiLibrary className="text-lg" />
             Library
+          </Link>
+        </Navbar.Link>
+        <Navbar.Link active={path === "/fines"} as={"div"}>
+          <Link
+            to="/fines"
+            className="flex items-center gap-2 text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
+          >
+            <HiCash className="text-lg" />
+            Fines
           </Link>
         </Navbar.Link>
       </Navbar.Collapse>

@@ -7,6 +7,7 @@ import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LibraryDashboard from "./Pages/IT22577160/LibraryDashboard";
+import FineDashboard from "./Pages/IT22607232/FineDashboard";
 
 const App = () => {
   return (
@@ -23,6 +24,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <LibraryDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/fines"
+            element={
+              <ProtectedRoute>
+                <FineDashboard />
               </ProtectedRoute>
             }
           />
