@@ -16,3 +16,8 @@ spring:
 
 server:
   port: 0
+
+jwt:
+  secret: test-jwt-secret-key-for-user-service-ci-only-2026
+  expiration: 3600000
+  refresh-expiration: 86400000
