@@ -1,6 +1,5 @@
 package com.example.libraryservice.dto.request;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -31,6 +30,5 @@ public class BorrowRequest {
     private LocalDate borrowDate;
 
     @NotNull(message = "Due date is required")
-    @FutureOrPresent(message = "Due date must be today or a future date")
     private LocalDate dueDate;
 }
