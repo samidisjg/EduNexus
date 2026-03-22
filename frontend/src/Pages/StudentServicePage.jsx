@@ -30,6 +30,11 @@ import {
   LuView,
   LuX,
 } from "react-icons/lu";
+  Spinner,
+  Table,
+  TextInput,
+} from "flowbite-react";
+import { FaDatabase, FaSearch, FaUserGraduate } from "react-icons/fa";
 import studentService from "../services/student.service";
 
 const initialStudentForm = {
