@@ -11,6 +11,9 @@ public class CourseResponse {
     private String courseId;
     private String name;
     private int capacity;
+    private int year;
+    private int semester;
+    private String lic;
     private Faculty faculty;
     private CourseStatus status;
 }

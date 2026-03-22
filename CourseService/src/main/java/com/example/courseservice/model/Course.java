@@ -19,6 +19,15 @@ public class Course {
 
     private int capacity;
 
+    private int year;
+
+    private int semester;
+
+    private String lic;
+
+    @Enumerated(EnumType.STRING)
+    private Faculty faculty;
+
     @Enumerated(EnumType.STRING)
     private Faculty faculty;
 
