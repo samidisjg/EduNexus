@@ -1,0 +1,75 @@
+name: Services SonarCloud
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Api-Gateway/**"
+      - "library-service/**"
+      - "fine-service/**"
+      - ".github/workflows/services-sonarcloud.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "Api-Gateway/**"
+      - "library-service/**"
+      - "fine-service/**"
+      - ".github/workflows/services-sonarcloud.yml"
+
+jobs:
+  sonarcloud:
+    if: ${{ vars.SONAR_ORGANIZATION != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service_name: api-gateway
+            working_directory: Api-Gateway
+            sonar_project_key_var: SONAR_API_GATEWAY_PROJECT_KEY
+          - service_name: library-service
+            working_directory: library-service
+            sonar_project_key_var: SONAR_LIBRARY_SERVICE_PROJECT_KEY
+          - service_name: fine-service
+            working_directory: fine-service
+            sonar_project_key_var: SONAR_FINE_SERVICE_PROJECT_KEY
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.working_directory }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Resolve Sonar project key
+        id: sonar_key
+        shell: bash
+        run: |
+          case "${{ matrix.sonar_project_key_var }}" in
+            SONAR_API_GATEWAY_PROJECT_KEY) echo "project_key=${{ vars.SONAR_API_GATEWAY_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+            SONAR_LIBRARY_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_LIBRARY_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+            SONAR_FINE_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_FINE_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Run SonarCloud scan
+        if: ${{ steps.sonar_key.outputs.project_key != '' }}
+        run: >
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar
+          -Dsonar.projectKey=${{ steps.sonar_key.outputs.project_key }}
+          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.java.test.binaries=target/test-classes
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
