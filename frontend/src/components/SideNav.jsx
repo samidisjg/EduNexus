@@ -9,6 +9,7 @@ import {
   FaChevronRight,
   FaGraduationCap,
   FaHome,
+  FaMoneyBillWave,
   FaSchool,
   FaSignOutAlt,
   FaThLarge,
@@ -34,7 +35,8 @@ const dashboardSections = [
     icon: FaUserTie,
     children: [
       { to: "/dashboard/staff/course", label: "Course", icon: FaBook },
-      { to: "/dashboard/staff/library", label: "Library", icon: FaSchool },
+      { to: "/library", label: "Library", icon: FaSchool },
+      { to: "/fines", label: "Fines", icon: FaMoneyBillWave },
     ],
   },
 ];

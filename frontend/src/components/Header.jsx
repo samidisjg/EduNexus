@@ -148,7 +148,7 @@ const Header = ({ onMenuToggle, showMenuButton = false }) => {
             Component
           </Link>
         </Navbar.Link>
-        <Navbar.Link active={path === "/library"} as={"div"}>
+        {/* <Navbar.Link active={path === "/library"} as={"div"}>
           <Link
             to="/library"
             className="flex items-center gap-2 text-blue-900 font-semibold hover:text-indigo-900 dark:text-gray-400 dark:hover:text-indigo-500 hover:underline"
@@ -165,7 +165,7 @@ const Header = ({ onMenuToggle, showMenuButton = false }) => {
             <HiCash className="text-lg" />
             Fines
           </Link>
-        </Navbar.Link>
+        </Navbar.Link> */}
       </Navbar.Collapse>
     </Navbar>
   );
