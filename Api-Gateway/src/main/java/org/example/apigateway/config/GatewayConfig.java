@@ -19,6 +19,7 @@ import java.util.List;
 @Setter
 public class GatewayConfig {
     private List<String> openEndpoints;
+    private String apiKey;
 
     @Bean
     public CorsWebFilter corsWebFilter() {

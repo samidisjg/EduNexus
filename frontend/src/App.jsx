@@ -9,6 +9,9 @@ import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
 import StudentServicePage from "./Pages/StudentServicePage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LibraryDashboard from "./Pages/IT22577160/LibraryDashboard";
+import FineDashboard from "./Pages/IT22607232/FineDashboard";
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -46,6 +49,22 @@ const App = () => {
                   <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                   <Route path="/dashboard/staff/course" element={<Component />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
+                  <Route
+            path="/library"
+            element={
+              <ProtectedRoute>
+                <LibraryDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/fines"
+            element={
+              <ProtectedRoute>
+                <FineDashboard />
+              </ProtectedRoute>
+            }
+          />
                 </Routes>
               </main>
             </div>
@@ -64,12 +83,27 @@ const App = () => {
                 <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                 <Route path="/dashboard/staff/course" element={<Component />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
+                <Route
+            path="/library"
+            element={
+              <ProtectedRoute>
+                <LibraryDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/fines"
+            element={
+              <ProtectedRoute>
+                <FineDashboard />
+              </ProtectedRoute>
+            }
+          />
               </Routes>
             </div>
             <FooterComponent />
           </>
         )}
-      </div>
     </Router>
   )
 }

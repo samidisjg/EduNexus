@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:user_db}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:12345678}
+    password: ${DB_PASSWORD:s2001}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
