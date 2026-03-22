@@ -29,6 +29,9 @@ public class Course {
     private Faculty faculty;
 
     @Enumerated(EnumType.STRING)
+    private Faculty faculty;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CourseStatus status;
 }

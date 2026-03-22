@@ -1,0 +1,69 @@
+name: Services CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "Api-Gateway/**"
+      - "library-service/**"
+      - "fine-service/**"
+      - ".github/workflows/services-cd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ vars.AZURE_RESOURCE_GROUP != '' && vars.AZURE_CONTAINER_REGISTRY != '' && vars.AZURE_CONTAINERAPPS_ENV != '' && secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service_name: api-gateway
+            working_directory: Api-Gateway
+            image_name: api-gateway
+            container_app_name: edunexus-api-gateway
+            target_port: "8081"
+            ingress: external
+          - service_name: library-service
+            working_directory: library-service
+            image_name: library-service
+            container_app_name: edunexus-library-service
+            target_port: "8083"
+            ingress: external
+          - service_name: fine-service
+            working_directory: fine-service
+            image_name: fine-service
+            container_app_name: edunexus-fine-service
+            target_port: "8084"
+            ingress: external
+
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/${{ matrix.working_directory }}
+          acrName: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+          containerAppName: ${{ matrix.container_app_name }}
+          resourceGroup: ${{ vars.AZURE_RESOURCE_GROUP }}
+          containerAppEnvironment: ${{ vars.AZURE_CONTAINERAPPS_ENV }}
+          imageToBuild: ${{ vars.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}
+          targetPort: ${{ matrix.target_port }}
+          ingress: ${{ matrix.ingress }}
