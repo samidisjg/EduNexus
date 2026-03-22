@@ -34,7 +34,19 @@ const dashboardSections = [
     label: "Staff",
     icon: FaUserTie,
     children: [
-      { to: "/dashboard/staff/course", label: "Course", icon: FaBook },
+      {
+        key: "staff-course-faculties",
+        label: "All Programs",
+        icon: FaBook,
+        to: "/dashboard/staff/course",
+        children: [
+          { to: "/dashboard/staff/course/FOC", label: "FOC", icon: FaBook },
+          { to: "/dashboard/staff/course/FOE", label: "FOE", icon: FaBook },
+          { to: "/dashboard/staff/course/FOM", label: "FOM", icon: FaBook },
+          { to: "/dashboard/staff/course/FOH", label: "FOH", icon: FaBook },
+          { to: "/dashboard/staff/course/FOA", label: "FOA", icon: FaBook },
+        ],
+      },
       { to: "/library", label: "Library", icon: FaSchool },
       { to: "/fines", label: "Fines", icon: FaMoneyBillWave },
     ],
@@ -49,6 +61,7 @@ const SideNav = ({ isOpen, onToggle }) => {
   const [openSections, setOpenSections] = useState({
     student: true,
     staff: true,
+    "staff-course-faculties": true,
   });
 
   const handleSignOut = () => {
@@ -60,6 +73,65 @@ const SideNav = ({ isOpen, onToggle }) => {
   const toggleSection = (key) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const renderNavItems = (items, depth = 0) =>
+    items.map((item) => {
+      if (item.children) {
+        const ItemIcon = item.icon;
+        const isGroupActive =
+          location.pathname === item.to || item.children.some((child) => location.pathname === child.to);
+
+        return (
+          <div key={item.key || item.label} className="space-y-1">
+            <div
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${
+                isGroupActive
+                  ? "text-cyan-600 dark:text-cyan-400"
+                  : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+              } ${depth > 0 ? "font-medium" : "font-semibold"}`}
+            >
+              <Link to={item.to || "#"} className="flex min-w-0 flex-1 items-center gap-3">
+                <ItemIcon className="text-sm shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => toggleSection(item.key)}
+                className="rounded-md p-1"
+              >
+                <FaChevronDown
+                  className={`text-xs transition-transform ${openSections[item.key] ? "rotate-180" : "rotate-0"}`}
+                />
+              </button>
+            </div>
+
+            {openSections[item.key] ? (
+              <div className={depth > 0 ? "space-y-1 pl-5" : "space-y-1 pl-6"}>
+                {renderNavItems(item.children, depth + 1)}
+              </div>
+            ) : null}
+          </div>
+        );
+      }
+
+      const ItemIcon = item.icon;
+      const isActive = location.pathname === item.to;
+
+      return (
+        <Link
+          key={item.to}
+          to={item.to}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+            isActive
+              ? "text-cyan-600 dark:text-cyan-400"
+              : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+          } ${depth > 1 ? "pl-2" : ""}`}
+        >
+          <ItemIcon className="text-sm shrink-0" />
+          <span>{item.label}</span>
+        </Link>
+      );
+    });
 
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
 
@@ -145,26 +217,7 @@ const SideNav = ({ isOpen, onToggle }) => {
                     </button>
 
                     {openSections[section.key] ? (
-                      <div className="space-y-1 pl-6">
-                        {section.children.map((item) => {
-                          const ItemIcon = item.icon;
-                          const isActive = location.pathname === item.to;
-                          return (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                                isActive
-                                  ? "text-cyan-600 dark:text-cyan-400"
-                                  : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
-                              }`}
-                            >
-                              <ItemIcon className="text-sm shrink-0" />
-                              <span>{item.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
+                      <div className="space-y-1 pl-6">{renderNavItems(section.children)}</div>
                     ) : null}
                   </div>
                 );

@@ -1,6 +1,7 @@
 package com.example.courseservice.dto;
 
 import com.example.courseservice.enums.CourseStatus;
+import com.example.courseservice.enums.Faculty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,5 +11,6 @@ public class CourseResponse {
     private String courseId;
     private String name;
     private int capacity;
+    private Faculty faculty;
     private CourseStatus status;
 }

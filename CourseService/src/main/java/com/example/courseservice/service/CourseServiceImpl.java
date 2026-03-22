@@ -37,6 +37,7 @@ public class CourseServiceImpl implements CourseService {
                 .courseId(req.getCourseId())
                 .name(req.getName())
                 .capacity(req.getCapacity())
+                .faculty(req.getFaculty())
                 .status(CourseStatus.ACTIVE)
                 .build();
 
@@ -153,6 +154,7 @@ public class CourseServiceImpl implements CourseService {
                 .courseId(c.getCourseId())
                 .name(c.getName())
                 .capacity(c.getCapacity())
+                .faculty(c.getFaculty())
                 .status(c.getStatus())
                 .build();
     }
