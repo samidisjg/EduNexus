@@ -1,0 +1,62 @@
+server:
+  port: ${SERVER_PORT:8084}
+  servlet:
+    context-path: /fine-service
+
+spring:
+  application:
+    name: fine-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:finedb}?useSSL=false&serverTimezone=Asia/Colombo&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:s2001}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    time-zone: Asia/Colombo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.springframework.orm.jpa: WARN
+    org.springframework.jdbc.datasource.init: WARN
+
+http:
+  client:
+    connect-timeout-ms: ${HTTP_CLIENT_CONNECT_TIMEOUT_MS:5000}
+    response-timeout-seconds: ${HTTP_CLIENT_RESPONSE_TIMEOUT_SECONDS:10}
+
+library:
+  service:
+    base-url: ${LIBRARY_SERVICE_BASE_URL:http://localhost:8083/library-service}
+
+internal:
+  api:
+    key: ${INTERNAL_API_KEY:my-secret-internal-key}
+
+gateway:
+  api:
+    key: ${GATEWAY_API_KEY:my-secret-gateway-key}
+
+fine:
+  amount:
+    per-day: ${FINE_AMOUNT_PER_DAY:100.00}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
