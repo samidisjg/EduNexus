@@ -218,24 +218,7 @@ const SideNav = ({ isOpen, onToggle }) => {
 
                     {openSections[section.key] ? (
                       <div className="space-y-1 pl-6">
-                        {section.children.map((item) => {
-                          const ItemIcon = item.icon;
-                          const isActive = location.pathname === item.to;
-                          return (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                                isActive
-                                  ? "text-cyan-600 dark:text-cyan-400"
-                                  : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
-                              }`}
-                            >
-                              <ItemIcon className="text-sm shrink-0" />
-                              <span>{item.label}</span>
-                            </Link>
-                          );
-                        })}
+                        {renderNavItems(section.children, 1)}
                       </div>
                     ) : null}
                   </div>

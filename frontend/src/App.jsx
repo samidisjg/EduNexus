@@ -48,7 +48,6 @@ const App = () => {
                   <Route path="/dashboard" element={<Component />} />
                   <Route path="/dashboard/student/course" element={<StudentServicePage />} />
                   <Route path="/dashboard/student/library" element={<StudentServicePage />} />
-                  <Route path="/dashboard/staff/course" element={<Component />} />
                   <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
                   <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
@@ -84,7 +83,6 @@ const App = () => {
                 <Route path="/dashboard" element={<Component />} />
                 <Route path="/dashboard/student/course" element={<StudentServicePage />} />
                 <Route path="/dashboard/student/library" element={<StudentServicePage />} />
-                <Route path="/dashboard/staff/course" element={<Component />} />
                 <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
                 <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
