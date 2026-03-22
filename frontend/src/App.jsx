@@ -9,6 +9,7 @@ import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
 import Component from "./Pages/Component";
 import StudentServicePage from "./Pages/StudentServicePage";
+import StaffCoursePage from "./Pages/StaffCoursePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LibraryDashboard from "./Pages/IT22577160/LibraryDashboard";
 import FineDashboard from "./Pages/IT22607232/FineDashboard";
@@ -48,6 +49,8 @@ const App = () => {
                   <Route path="/dashboard/student/course" element={<StudentServicePage />} />
                   <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                   <Route path="/dashboard/staff/course" element={<Component />} />
+                  <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
+                  <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                   <Route path="/dashboard/staff/library" element={<Component />} />
                   <Route
                     path="/library"
@@ -82,6 +85,8 @@ const App = () => {
                 <Route path="/dashboard/student/course" element={<StudentServicePage />} />
                 <Route path="/dashboard/student/library" element={<StudentServicePage />} />
                 <Route path="/dashboard/staff/course" element={<Component />} />
+                <Route path="/dashboard/staff/course" element={<StaffCoursePage />} />
+                <Route path="/dashboard/staff/course/:facultyCode" element={<StaffCoursePage />} />
                 <Route path="/dashboard/staff/library" element={<Component />} />
                 <Route
                   path="/library"

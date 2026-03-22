@@ -37,6 +37,10 @@ public class CourseServiceImpl implements CourseService {
                 .courseId(req.getCourseId())
                 .name(req.getName())
                 .capacity(req.getCapacity())
+                .year(req.getYear())
+                .semester(req.getSemester())
+                .lic(req.getLic())
+                .faculty(req.getFaculty())
                 .status(CourseStatus.ACTIVE)
                 .build();
 
@@ -153,6 +157,10 @@ public class CourseServiceImpl implements CourseService {
                 .courseId(c.getCourseId())
                 .name(c.getName())
                 .capacity(c.getCapacity())
+                .year(c.getYear())
+                .semester(c.getSemester())
+                .lic(c.getLic())
+                .faculty(c.getFaculty())
                 .status(c.getStatus())
                 .build();
     }

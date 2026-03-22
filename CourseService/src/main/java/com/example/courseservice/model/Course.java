@@ -1,6 +1,7 @@
 package com.example.courseservice.model;
 
 import com.example.courseservice.enums.CourseStatus;
+import com.example.courseservice.enums.Faculty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,18 @@ public class Course {
     private String name;
 
     private int capacity;
+
+    private int year;
+
+    private int semester;
+
+    private String lic;
+
+    @Enumerated(EnumType.STRING)
+    private Faculty faculty;
+
+    @Enumerated(EnumType.STRING)
+    private Faculty faculty;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
