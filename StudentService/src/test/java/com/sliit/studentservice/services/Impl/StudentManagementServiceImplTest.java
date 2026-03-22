@@ -60,6 +60,7 @@ class StudentManagementServiceImplTest {
         validCreateRequest.setPhone("0712345678");
         validCreateRequest.setDepartment("IT");
         validCreateRequest.setYear(3);
+        validCreateRequest.setSemester(1);
     }
 
     @Test
@@ -100,6 +101,46 @@ class StudentManagementServiceImplTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("email is required", response.getBody().getMessage());
+    }
+
+    @Test
+    void addStudentReturnsBadRequestWhenYearIsMissing() {
+        validCreateRequest.setYear(null);
+
+        ResponseEntity<StudentCreateResponseDto> response = service.addStudent(validCreateRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("year must be between 1 and 4", response.getBody().getMessage());
+    }
+
+    @Test
+    void addStudentReturnsBadRequestWhenYearOutOfRange() {
+        validCreateRequest.setYear(5);
+
+        ResponseEntity<StudentCreateResponseDto> response = service.addStudent(validCreateRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("year must be between 1 and 4", response.getBody().getMessage());
+    }
+
+    @Test
+    void addStudentReturnsBadRequestWhenSemesterIsMissing() {
+        validCreateRequest.setSemester(null);
+
+        ResponseEntity<StudentCreateResponseDto> response = service.addStudent(validCreateRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("semester must be 1 or 2", response.getBody().getMessage());
+    }
+
+    @Test
+    void addStudentReturnsBadRequestWhenSemesterOutOfRange() {
+        validCreateRequest.setSemester(3);
+
+        ResponseEntity<StudentCreateResponseDto> response = service.addStudent(validCreateRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("semester must be 1 or 2", response.getBody().getMessage());
     }
 
     @Test
@@ -336,6 +377,19 @@ class StudentManagementServiceImplTest {
         ResponseEntity<?> response = service.enrollCourse("STU001", "C001");
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    void enrollCourseReturnsConflictWhenRemainingSeatsIsNull() {
+        when(studentRepository.findByStudentId("STU001")).thenReturn(Optional.of(StudentEntity.builder().build()));
+        when(enrollmentRepository.existsByStudentIdAndCourseId("STU001", "C001")).thenReturn(false);
+        when(courseServiceClient.getCourseAvailability("C001"))
+                .thenReturn(CourseAvailabilityResponseDto.builder().available(true).remainingSeats(null).build());
+
+        ResponseEntity<?> response = service.enrollCourse("STU001", "C001");
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("Course is not available or has no remaining seats for courseId: C001", response.getBody());
     }
 
     @Test
