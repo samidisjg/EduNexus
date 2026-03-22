@@ -21,8 +21,10 @@ public class StudentClient {
 
     // INTERNAL CALL : enrolled count for a course
     public int getEnrolledCount(String courseId) {
-
-        String url = String.format("%s/students-service/internal/students/count?courseId=%s", studentBaseUrl, courseId);
+        String normalizedBaseUrl = studentBaseUrl.endsWith("/")
+                ? studentBaseUrl.substring(0, studentBaseUrl.length() - 1)
+                : studentBaseUrl;
+        String url = String.format("%s/students/internal/students/count?courseId=%s", normalizedBaseUrl, courseId);
 
         StudentCountResponse response = webClient.get()
                 .uri(url)
@@ -37,4 +39,3 @@ public class StudentClient {
         return Integer.parseInt(response.getEnrolledCount());
     }
 }
-

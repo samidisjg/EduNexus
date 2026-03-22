@@ -1,0 +1,109 @@
+name: Services CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "Api-Gateway/**"
+      - "library-service/**"
+      - "fine-service/**"
+      - "UserService/**"
+      - "StudentService/**"
+      - "CourseService/**"
+      - ".github/workflows/services-cd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service_name: api-gateway
+            working_directory: Api-Gateway
+            image_name: api-gateway
+            container_app_name: edunexus-api-gateway
+            target_port: "8081"
+            ingress: external
+          - service_name: library-service
+            working_directory: library-service
+            image_name: library-service
+            container_app_name: edunexus-library-service
+            target_port: "8083"
+            ingress: external
+          - service_name: fine-service
+            working_directory: fine-service
+            image_name: fine-service
+            container_app_name: edunexus-fine-service
+            target_port: "8084"
+            ingress: external
+          - service_name: user-service
+            working_directory: UserService
+            image_name: user-service
+            container_app_name: edunexus-user-service
+            target_port: "9091"
+            ingress: external
+          - service_name: student-service
+            working_directory: StudentService
+            image_name: student-service
+            container_app_name: edunexus-student-service
+            target_port: "9095"
+            ingress: external
+          - service_name: course-service
+            working_directory: CourseService
+            image_name: course-service
+            container_app_name: edunexus-course-service
+            target_port: "9096"
+            ingress: external
+
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+      AZURE_CONTAINERAPPS_ENV: ${{ vars.AZURE_CONTAINERAPPS_ENV }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Azure configuration
+        shell: bash
+        run: |
+          missing=0
+          for key in AZURE_RESOURCE_GROUP AZURE_CONTAINER_REGISTRY AZURE_CONTAINERAPPS_ENV AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::$key is not configured."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Azure login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/${{ matrix.working_directory }}
+          acrName: ${{ env.AZURE_CONTAINER_REGISTRY }}
+          containerAppName: ${{ matrix.container_app_name }}
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+          containerAppEnvironment: ${{ env.AZURE_CONTAINERAPPS_ENV }}
+          imageToBuild: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}
+          targetPort: ${{ matrix.target_port }}
+          ingress: ${{ matrix.ingress }}
