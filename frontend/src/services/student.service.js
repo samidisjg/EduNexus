@@ -2,6 +2,7 @@ import { API_CONFIG } from "../config/api.config";
 import { authenticatedFetch } from "../utils/httpClient";
 
 const STUDENT_BASE_URL = API_CONFIG.STUDENT_SERVICE;
+const COURSE_BASE_URL = API_CONFIG.COURSE_SERVICE;
 
 const parseResponse = async (response) => {
   let payload;
@@ -77,15 +78,27 @@ class StudentService {
     return parseResponse(response);
   }
 
-  async getStudentCountByCourse(courseId) {
-    const query = buildQuery({ courseId });
-    const response = await authenticatedFetch(
-      `${STUDENT_BASE_URL}/internal/students/count${query}`,
-      {
-        method: "GET",
+  async getCourseAvailability(courseId) {
+    const candidateUrls = [
+      `${COURSE_BASE_URL}/courses/${courseId}/availability`,
+      `${COURSE_BASE_URL}/courses/${courseId}/available-seats`,
+      `${COURSE_BASE_URL}/courses/availability?courseId=${encodeURIComponent(courseId)}`,
+      `${COURSE_BASE_URL}/courses/${courseId}`,
+    ];
+
+    let lastError = null;
+
+    for (const url of candidateUrls) {
+      try {
+        const response = await authenticatedFetch(url, { method: "GET" });
+        const payload = await parseResponse(response);
+        return payload;
+      } catch (error) {
+        lastError = error;
       }
-    );
-    return parseResponse(response);
+    }
+
+    throw lastError || new Error("Unable to fetch course availability.");
   }
 }
 
