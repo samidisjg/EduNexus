@@ -243,6 +243,12 @@ const StaffCoursePage = () => {
       () => courseService.getCourses(),
       silent ? "" : "Course list refreshed."
     );
+
+    if (response) {
+      setCourses(extractArray(response));
+    }
+  };
+
   useEffect(() => {
     const loadInitialCourses = async () => {
       setLoading("listCourses", true);
@@ -259,8 +265,6 @@ const StaffCoursePage = () => {
       }
     };
 
-  useEffect(() => {
-    handleLoadCourses(true);
     loadInitialCourses();
   }, []);
 
