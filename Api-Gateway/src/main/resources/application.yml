@@ -50,6 +50,8 @@ spring:
         - /api-gateway/user-service/auth/sign-up
         - /api-gateway/user-service/auth/sign-in
       api-key: ${GATEWAY_API_KEY:my-secret-gateway-key}
+      allowed-origin-patterns:
+        - ${GATEWAY_ALLOWED_ORIGIN_PATTERN:http://localhost:5173}
 
 
   main:

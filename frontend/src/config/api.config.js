@@ -1,14 +1,22 @@
+// Default to the local gateway during development and the public gateway in production.
+const DEFAULT_GATEWAY_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:8081/api-gateway'
+  : 'https://edunexus-api-gateway.wittypond-0cb1e8f4.centralindia.azurecontainerapps.io/api-gateway';
+
 // API Gateway Configuration
+const GATEWAY_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_GATEWAY_BASE_URL;
+
 export const API_CONFIG = {
   // Base Gateway URL
-  GATEWAY_BASE_URL: 'http://localhost:8081/api-gateway',
+  GATEWAY_BASE_URL,
   
   // Service URLs (through API Gateway)
-  USER_SERVICE: 'http://localhost:8081/api-gateway/user-service',
-  STUDENT_SERVICE: 'http://localhost:8081/api-gateway/students-service',
-  COURSE_SERVICE: 'http://localhost:8081/api-gateway/course-service',
-  LIBRARY_SERVICE: 'http://localhost:8081/api-gateway/library-service',
-  FINE_SERVICE: 'http://localhost:8081/api-gateway/fine-service',
+  USER_SERVICE: `${GATEWAY_BASE_URL}/user-service`,
+  STUDENT_SERVICE: `${GATEWAY_BASE_URL}/students-service`,
+  COURSE_SERVICE: `${GATEWAY_BASE_URL}/course-service`,
+  LIBRARY_SERVICE: `${GATEWAY_BASE_URL}/library-service`,
+  FINE_SERVICE: `${GATEWAY_BASE_URL}/fine-service`,
   
   // Timeout configuration
   TIMEOUT: 30000,

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 import {
   Alert,
   Badge,
@@ -104,6 +105,13 @@ const SummaryCard = ({ title, value, subtitle, icon: Icon }) => (
     </div>
   </div>
 );
+
+SummaryCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  subtitle: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+};
 
 const StudentTableSkeleton = () => (
   <div className="space-y-3">
@@ -304,7 +312,32 @@ const StudentServicePage = () => {
   };
 
   useEffect(() => {
-    handleGetStudents(initialFilters, true);
+    const loadInitialStudents = async () => {
+      setLoading("listStudents", true);
+      setError("");
+      setSuccess("");
+
+      try {
+        const response = await studentService.getStudentList(initialFilters);
+        const rows = normalizeRows(response);
+        const pagination = normalizePagination(response, rows.length, initialFilters);
+        setStudents(rows);
+        setPageMeta(pagination);
+        setFilters((prev) => ({
+          ...prev,
+          page: pagination.page,
+          size: pagination.size,
+          sortBy: initialFilters.sortBy ?? prev.sortBy,
+          sortDir: initialFilters.sortDir ?? prev.sortDir,
+        }));
+      } catch (actionError) {
+        setError(actionError.message || "Request failed.");
+      } finally {
+        setLoading("listStudents", false);
+      }
+    };
+
+    loadInitialStudents();
   }, []);
 
   const handleFilterStudents = () => {

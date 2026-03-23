@@ -7,6 +7,9 @@ on:
       - "Api-Gateway/**"
       - "library-service/**"
       - "fine-service/**"
+      - "UserService/**"
+      - "StudentService/**"
+      - "CourseService/**"
       - ".github/workflows/services-sonarcloud.yml"
   push:
     branches:
@@ -15,6 +18,9 @@ on:
       - "Api-Gateway/**"
       - "library-service/**"
       - "fine-service/**"
+      - "UserService/**"
+      - "StudentService/**"
+      - "CourseService/**"
       - ".github/workflows/services-sonarcloud.yml"
 
 jobs:
@@ -34,6 +40,15 @@ jobs:
           - service_name: fine-service
             working_directory: fine-service
             sonar_project_key_var: SONAR_FINE_SERVICE_PROJECT_KEY
+          - service_name: user-service
+            working_directory: UserService
+            sonar_project_key_var: SONAR_USER_SERVICE_PROJECT_KEY
+          - service_name: student-service
+            working_directory: StudentService
+            sonar_project_key_var: SONAR_STUDENT_SERVICE_PROJECT_KEY
+          - service_name: course-service
+            working_directory: CourseService
+            sonar_project_key_var: SONAR_COURSE_SERVICE_PROJECT_KEY
 
     defaults:
       run:
@@ -60,6 +75,9 @@ jobs:
             SONAR_API_GATEWAY_PROJECT_KEY) echo "project_key=${{ vars.SONAR_API_GATEWAY_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
             SONAR_LIBRARY_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_LIBRARY_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
             SONAR_FINE_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_FINE_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+            SONAR_USER_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_USER_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+            SONAR_STUDENT_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_STUDENT_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
+            SONAR_COURSE_SERVICE_PROJECT_KEY) echo "project_key=${{ vars.SONAR_COURSE_SERVICE_PROJECT_KEY }}" >> "$GITHUB_OUTPUT" ;;
           esac
 
       - name: Run SonarCloud scan
@@ -71,5 +89,6 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.java.binaries=target/classes
           -Dsonar.java.test.binaries=target/test-classes
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

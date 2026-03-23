@@ -293,7 +293,34 @@ const FineDashboard = () => {
     setCollectionScope(isStaff ? "all" : "student");
 
     if (isStaff) {
-      loadAllFines(false);
+      const loadInitialFines = async () => {
+        setCollectionScope("all");
+        setActiveStudentId("");
+        setListLoading(true);
+
+        try {
+          const data = await fineService.getAllFines();
+          const sortedRecords = sortFinesByCreatedAt(
+            sanitizeFineCollection(Array.isArray(data) ? data : [])
+          );
+          setFines(sortedRecords);
+
+          const nextSelected = sortedRecords[0] || null;
+          setSelectedFine(nextSelected);
+
+          if (nextSelected) {
+            await loadPaymentsByFineId(nextSelected.fineId);
+          } else {
+            setPayments([]);
+          }
+        } catch (error) {
+          setFlash({ type: "failure", message: error.message || "Failed to load fines." });
+        } finally {
+          setListLoading(false);
+        }
+      };
+
+      loadInitialFines();
     } else {
       setFines([]);
       setSelectedFine(null);

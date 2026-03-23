@@ -20,7 +20,6 @@ import {
   FaEdit,
   FaLayerGroup,
   FaPlusCircle,
-  FaSearch,
   FaSignal,
   FaUniversity,
 } from "react-icons/fa";
@@ -183,7 +182,7 @@ const StaffCoursePage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
 
   const [courseForm, setCourseForm] = useState(buildInitialCourseForm(selectedFaculty || "FOC"));
   const [courseIdLookup, setCourseIdLookup] = useState("");
@@ -238,21 +237,31 @@ const StaffCoursePage = () => {
       );
     });
   };
-
   const handleLoadCourses = async (silent = false) => {
     const response = await runAction(
       "listCourses",
       () => courseService.getCourses(),
       silent ? "" : "Course list refreshed."
     );
-
-    if (response) {
-      setCourses(extractArray(response));
-    }
-  };
+  useEffect(() => {
+    const loadInitialCourses = async () => {
+      setLoading("listCourses", true);
+      setError("");
+      setSuccess("");
+      try {
+        const response = await courseService.getCourses();
+        setCourses(extractArray(response));
+        setSuccess("Course list loaded.");
+      } catch (actionError) {
+        setError(actionError.message || "Request failed.");
+      } finally {
+        setLoading("listCourses", false);
+      }
+    };
 
   useEffect(() => {
     handleLoadCourses(true);
+    loadInitialCourses();
   }, []);
 
   useEffect(() => {
