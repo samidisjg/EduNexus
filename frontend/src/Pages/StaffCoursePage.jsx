@@ -559,7 +559,6 @@ const StaffCoursePage = () => {
           ) : null}
         </div>
       </div>
-    </div>
     );
   }
 
