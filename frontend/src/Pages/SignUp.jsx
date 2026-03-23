@@ -65,9 +65,12 @@ const SignUp = () => {
     }
 
     try {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...signUpData } = formData;
-      const result = await authService.signUp(signUpData);
+      const result = await authService.signUp({
+        userName: formData.userName,
+        userEmail: formData.userEmail,
+        userPassword: formData.userPassword,
+        role: formData.role,
+      });
 
       if (result.success) {
         setSuccessMsg("Registration successful! Redirecting to sign in...");

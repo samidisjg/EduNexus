@@ -102,7 +102,20 @@ const LibraryDashboard = () => {
 
   useEffect(() => {
     if (isStaff) {
-      loadBorrowings("all", "");
+      const loadInitialBorrowings = async () => {
+        setBorrowingsLoading(true);
+
+        try {
+          const data = await libraryService.getAllBorrowings();
+          setBorrowings(Array.isArray(data) ? data : []);
+        } catch (error) {
+          toast.error(error.message || "Failed to load borrowing records.");
+        } finally {
+          setBorrowingsLoading(false);
+        }
+      };
+
+      loadInitialBorrowings();
       setBorrowingsMode("all");
       setStudentBorrowFilter("");
     } else {

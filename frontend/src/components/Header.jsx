@@ -5,7 +5,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { AiOutlineSearch } from "react-icons/ai";
-import { HiLibrary, HiCash } from "react-icons/hi";
 import { signOutSuccess } from "../redux/user/userSlice";
 import authService from "../services/auth.service";
 
