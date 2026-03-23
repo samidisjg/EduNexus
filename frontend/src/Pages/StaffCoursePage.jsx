@@ -197,6 +197,38 @@ const CourseEmptyState = () => (
   </div>
 );
 
+const FloatingAlerts = ({ error, success, onDismissError, onDismissSuccess }) => (
+  <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+    {error ? (
+      <Alert color="failure">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm">{error}</span>
+          <button type="button" onClick={onDismissError} aria-label="Close Error">
+            <LuX />
+          </button>
+        </div>
+      </Alert>
+    ) : null}
+    {success ? (
+      <Alert color="success">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm">{success}</span>
+          <button type="button" onClick={onDismissSuccess} aria-label="Close Success">
+            <LuX />
+          </button>
+        </div>
+      </Alert>
+    ) : null}
+  </div>
+);
+
+FloatingAlerts.propTypes = {
+  error: PropTypes.string.isRequired,
+  success: PropTypes.string.isRequired,
+  onDismissError: PropTypes.func.isRequired,
+  onDismissSuccess: PropTypes.func.isRequired,
+};
+
 const formatCourseOption = (course) => {
   const bits = [course.courseId, course.name].filter(Boolean);
   const academic = [];
@@ -567,28 +599,12 @@ const StaffCoursePage = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
-          {error ? (
-            <Alert color="failure">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{error}</span>
-                <button type="button" onClick={() => setError("")} aria-label="Close Error">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-          {success ? (
-            <Alert color="success">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{success}</span>
-                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-        </div>
+        <FloatingAlerts
+          error={error}
+          success={success}
+          onDismissError={() => setError("")}
+          onDismissSuccess={() => setSuccess("")}
+        />
       </div>
     );
   }
@@ -925,28 +941,12 @@ const StaffCoursePage = () => {
           </Modal.Body>
         </Modal>
 
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
-          {error ? (
-            <Alert color="failure">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{error}</span>
-                <button type="button" onClick={() => setError("")} aria-label="Close Error">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-          {success ? (
-            <Alert color="success">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{success}</span>
-                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-        </div>
+        <FloatingAlerts
+          error={error}
+          success={success}
+          onDismissError={() => setError("")}
+          onDismissSuccess={() => setSuccess("")}
+        />
       </div>
     </div>
   );
