@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
@@ -20,6 +21,7 @@ import {
   FaEdit,
   FaLayerGroup,
   FaPlusCircle,
+  FaSearch,
   FaSignal,
   FaUniversity,
 } from "react-icons/fa";
@@ -142,6 +144,13 @@ const SummaryCard = ({ title, value, subtitle, icon: Icon }) => (
   </div>
 );
 
+SummaryCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  subtitle: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+};
+
 const CourseTableSkeleton = () => (
   <div className="space-y-3">
     {[...Array(6)].map((_, rowIndex) => (
@@ -182,7 +191,7 @@ const StaffCoursePage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState({});
-  const [searchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [courseForm, setCourseForm] = useState(buildInitialCourseForm(selectedFaculty || "FOC"));
   const [courseIdLookup, setCourseIdLookup] = useState("");
@@ -550,6 +559,7 @@ const StaffCoursePage = () => {
           ) : null}
         </div>
       </div>
+    </div>
     );
   }
 
