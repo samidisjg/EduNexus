@@ -2,7 +2,7 @@ import authService from "./auth.service";
 
 describe("authService", () => {
   it("signs up successfully with JSON response", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 201,
       statusText: "Created",
@@ -19,7 +19,7 @@ describe("authService", () => {
       role: "ADMIN",
     });
 
-    expect(global.fetch).toHaveBeenCalledOnce();
+    expect(globalThis.fetch).toHaveBeenCalledOnce();
     expect(result).toEqual({
       success: true,
       data: { message: "Created" },
@@ -28,7 +28,7 @@ describe("authService", () => {
   });
 
   it("handles non-json signup failures gracefully", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 403,
       statusText: "Forbidden",
@@ -48,7 +48,7 @@ describe("authService", () => {
   });
 
   it("stores auth tokens after successful sign in", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: "OK",
@@ -73,7 +73,7 @@ describe("authService", () => {
   });
 
   it("returns a readable message for invalid sign in responses", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 502,
       statusText: "Bad Gateway",
