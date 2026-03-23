@@ -65,9 +65,9 @@ class StudentSpecificationsTest {
         Predicate finalPredicate = mock(Predicate.class);
 
         when(criteriaBuilder.conjunction()).thenReturn(conjunction);
-        when(root.get("name")).thenReturn(namePath);
-        when(root.get("email")).thenReturn(emailPath);
-        when(root.get("studentId")).thenReturn(studentIdPath);
+        doReturn(namePath).when(root).get("name");
+        doReturn(emailPath).when(root).get("email");
+        doReturn(studentIdPath).when(root).get("studentId");
         when(criteriaBuilder.lower(namePath)).thenReturn(loweredName);
         when(criteriaBuilder.lower(emailPath)).thenReturn(loweredEmail);
         when(criteriaBuilder.lower(studentIdPath)).thenReturn(loweredStudentId);
