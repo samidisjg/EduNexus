@@ -27,40 +27,40 @@ jobs:
         include:
           - service_name: api-gateway
             working_directory: Api-Gateway
-            image_name: api-gateway
+            image_name: edunexus-api-gateway
             container_app_name: edunexus-api-gateway
             target_port: "8081"
             ingress: external
           - service_name: library-service
             working_directory: library-service
-            image_name: library-service
+            image_name: edunexus-library-service
             container_app_name: edunexus-library-service
             target_port: "8083"
-            ingress: external
+            ingress: internal
           - service_name: fine-service
             working_directory: fine-service
-            image_name: fine-service
+            image_name: edunexus-fine-service
             container_app_name: edunexus-fine-service
             target_port: "8084"
-            ingress: external
+            ingress: internal
           - service_name: user-service
             working_directory: UserService
-            image_name: user-service
+            image_name: edunexus-user-service
             container_app_name: edunexus-user-service
             target_port: "9091"
-            ingress: external
+            ingress: internal
           - service_name: student-service
             working_directory: StudentService
-            image_name: student-service
+            image_name: edunexus-student-service
             container_app_name: edunexus-student-service
             target_port: "9095"
-            ingress: external
+            ingress: internal
           - service_name: course-service
             working_directory: CourseService
-            image_name: course-service
+            image_name: edunexus-course-service
             container_app_name: edunexus-course-service
             target_port: "9096"
-            ingress: external
+            ingress: internal
 
     env:
       IMAGE_TAG: ${{ github.sha }}
