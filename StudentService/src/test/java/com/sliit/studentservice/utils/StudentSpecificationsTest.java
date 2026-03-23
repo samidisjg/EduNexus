@@ -12,11 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.domain.Specification;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class StudentSpecificationsTest {
+
+    @SuppressWarnings("unchecked")
+    private static Path<String> stringPath() {
+        return mock(Path.class);
+    }
 
     @Test
     void byFiltersReturnsBaseConjunctionWhenNoFiltersProvided() {
@@ -48,9 +51,9 @@ class StudentSpecificationsTest {
         Root<StudentEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        Path<Object> namePath = mock(Path.class);
-        Path<Object> emailPath = mock(Path.class);
-        Path<Object> studentIdPath = mock(Path.class);
+        Path<String> namePath = stringPath();
+        Path<String> emailPath = stringPath();
+        Path<String> studentIdPath = stringPath();
         Expression<String> loweredName = mock(Expression.class);
         Expression<String> loweredEmail = mock(Expression.class);
         Expression<String> loweredStudentId = mock(Expression.class);
@@ -65,9 +68,9 @@ class StudentSpecificationsTest {
         when(root.get("name")).thenReturn(namePath);
         when(root.get("email")).thenReturn(emailPath);
         when(root.get("studentId")).thenReturn(studentIdPath);
-        when(criteriaBuilder.lower(namePath.as(String.class))).thenReturn(loweredName);
-        when(criteriaBuilder.lower(emailPath.as(String.class))).thenReturn(loweredEmail);
-        when(criteriaBuilder.lower(studentIdPath.as(String.class))).thenReturn(loweredStudentId);
+        when(criteriaBuilder.lower(namePath)).thenReturn(loweredName);
+        when(criteriaBuilder.lower(emailPath)).thenReturn(loweredEmail);
+        when(criteriaBuilder.lower(studentIdPath)).thenReturn(loweredStudentId);
         when(criteriaBuilder.like(loweredName, "%alice%")).thenReturn(namePredicate);
         when(criteriaBuilder.like(loweredEmail, "%alice%")).thenReturn(emailPredicate);
         when(criteriaBuilder.like(loweredStudentId, "%alice%")).thenReturn(studentIdPredicate);

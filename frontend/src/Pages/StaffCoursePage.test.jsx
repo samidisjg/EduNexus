@@ -23,7 +23,7 @@ describe("StaffCoursePage", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("FACULTY WORKSPACE")).toBeInTheDocument();
+    expect(screen.getByText(/Faculty Workspace/i)).toBeInTheDocument();
     await waitFor(() => expect(courseService.getCourses).toHaveBeenCalled());
     expect(await screen.findByText("CS101")).toBeInTheDocument();
   });
