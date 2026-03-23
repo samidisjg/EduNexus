@@ -1,6 +1,11 @@
+// Default to the local gateway during development and same-origin routing in production.
+const DEFAULT_GATEWAY_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:8081/api-gateway'
+  : '/api-gateway';
+
 // API Gateway Configuration
 const GATEWAY_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api-gateway';
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_GATEWAY_BASE_URL;
 
 export const API_CONFIG = {
   // Base Gateway URL
