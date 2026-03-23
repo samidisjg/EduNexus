@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { afterEach } from "vitest";
 import SideNav from "./SideNav";
 import authService from "../services/auth.service";
 import { signOutSuccess } from "../redux/user/userSlice";

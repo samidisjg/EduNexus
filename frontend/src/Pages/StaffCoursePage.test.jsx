@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach } from "vitest";
 import StaffCoursePage from "./StaffCoursePage";
 import courseService from "../services/course.service";
 
