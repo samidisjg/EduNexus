@@ -1,7 +1,7 @@
-// Default to the local gateway during development and same-origin routing in production.
+// Default to the local gateway during development and the public gateway in production.
 const DEFAULT_GATEWAY_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8081/api-gateway'
-  : '/api-gateway';
+  : 'https://edunexus-api-gateway.wittypond-0cb1e8f4.centralindia.azurecontainerapps.io/api-gateway';
 
 // API Gateway Configuration
 const GATEWAY_BASE_URL =
