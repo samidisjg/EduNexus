@@ -31,7 +31,6 @@ import {
   LuView,
   LuX,
 } from "react-icons/lu";
-import { FaDatabase, FaSearch, FaUserGraduate } from "react-icons/fa";
 import studentService from "../services/student.service";
 
 const facultyOptions = [
@@ -992,14 +991,18 @@ const StudentServicePage = () => {
                   <Select
                     value={enrollData.courseId}
                     onChange={(event) => {
-                      setEnrollData((prev) => ({ ...prev, courseId: event.target.value }));
-                      setAvailableSeats(null);
+                      const nextCourseId = event.target.value;
+                      const selectedCourse = availableCourses.find((course) => course.courseId === nextCourseId);
+                      setEnrollData((prev) => ({ ...prev, courseId: nextCourseId }));
+                      setAvailableSeats(
+                        typeof selectedCourse?.remainingSeats === "number" ? selectedCourse.remainingSeats : null
+                      );
                     }}
                   >
                     <option value="">Select a course</option>
                     {availableCourses.map((course) => (
                       <option key={course.courseId} value={course.courseId}>
-                        {course.courseId} - {course.name} (Y{course.year} S{course.semester}) - {course.remainingSeats ?? 0} seats
+                        {course.courseId} - {course.name} (Y{course.year} S{course.semester})
                       </option>
                     ))}
                   </Select>
@@ -1012,7 +1015,7 @@ const StudentServicePage = () => {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {availableCourses.length === 0 ? (
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                      No new active courses with available seats were found for this student's faculty, year, and semester.
+                      No new active courses with available seats were found for this student&apos;s faculty, year, and semester.
                     </p>
                   ) : null}
                   <Badge color="info">Available Seats: {availableSeats === null ? "N/A" : availableSeats}</Badge>

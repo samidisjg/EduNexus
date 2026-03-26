@@ -22,7 +22,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             select br
             from BorrowRecord br
             where br.status = :borrowStatus
-              and br.dueDate <= :today
+              and br.dueDate < :today
               and (br.fineId is null or br.fineStatus = :noFineStatus)
             order by br.dueDate asc
             """)

@@ -76,4 +76,23 @@ class OverdueFineSyncServiceTest {
         verify(fineClientService, never()).calculateFine(any());
         verify(borrowRecordRepository, never()).save(any(BorrowRecord.class));
     }
+
+    @Test
+    void syncOverdueBorrowingsShouldIgnoreRecordsDueToday() {
+        BorrowRecord dueTodayRecord = BorrowRecord.builder()
+                .id(101L)
+                .studentId("STU-901")
+                .status(BorrowStatus.BORROWED)
+                .dueDate(LocalDate.now())
+                .fineStatus(FineStatus.NONE)
+                .build();
+
+        when(borrowRecordRepository.findOverdueBorrowingsWithoutFine(eq(BorrowStatus.BORROWED), any(LocalDate.class), eq(FineStatus.NONE)))
+                .thenReturn(List.of(dueTodayRecord));
+
+        overdueFineSyncService.syncOverdueBorrowingsToFineService();
+
+        verify(fineClientService, never()).calculateFine(any());
+        verify(borrowRecordRepository, never()).save(any(BorrowRecord.class));
+    }
 }

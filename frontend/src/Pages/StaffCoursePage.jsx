@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
@@ -22,6 +23,7 @@ import {
   FaPlusCircle,
   FaSignal,
   FaUniversity,
+  FaSearch,
 } from "react-icons/fa";
 import { LuFilter, LuRefreshCcw, LuSearch, LuView, LuX } from "react-icons/lu";
 import courseService from "../services/course.service";
@@ -38,6 +40,27 @@ const facultyLabelMap = facultyOptions.reduce((map, faculty) => {
   map[faculty.value] = faculty.label;
   return map;
 }, {});
+
+const COURSE_SKELETON_ROWS = [
+  "skeleton-row-1",
+  "skeleton-row-2",
+  "skeleton-row-3",
+  "skeleton-row-4",
+  "skeleton-row-5",
+  "skeleton-row-6",
+];
+
+const COURSE_SKELETON_CELLS = [
+  "course-id",
+  "course-name",
+  "course-term",
+  "course-lic",
+  "course-capacity",
+  "course-status",
+  "action-view",
+  "action-capacity",
+  "action-status",
+];
 
 const isCourseLike = (item) =>
   Boolean(item) &&
@@ -142,13 +165,20 @@ const SummaryCard = ({ title, value, subtitle, icon: Icon }) => (
   </div>
 );
 
+SummaryCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  subtitle: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+};
+
 const CourseTableSkeleton = () => (
   <div className="space-y-3">
-    {[...Array(6)].map((_, rowIndex) => (
-      <div key={rowIndex} className="grid grid-cols-9 gap-3">
-        {[...Array(9)].map((__, cellIndex) => (
+    {COURSE_SKELETON_ROWS.map((rowId) => (
+      <div key={rowId} className="grid grid-cols-9 gap-3">
+        {COURSE_SKELETON_CELLS.map((cellId) => (
           <div
-            key={`${rowIndex}-${cellIndex}`}
+            key={`${rowId}-${cellId}`}
             className="h-9 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-700/70"
           />
         ))}
@@ -156,6 +186,48 @@ const CourseTableSkeleton = () => (
     ))}
   </div>
 );
+
+const CourseEmptyState = () => (
+  <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-14 text-center dark:border-slate-600 dark:bg-slate-800/40">
+    <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-200">
+      <FaSearch size={24} />
+    </div>
+    <p className="mt-4 text-lg font-semibold text-slate-800 dark:text-slate-100">No courses match the current view</p>
+    <p className="mt-1 text-sm text-slate-500">Try another search term or create a new course for this faculty.</p>
+  </div>
+);
+
+const FloatingAlerts = ({ error, success, onDismissError, onDismissSuccess }) => (
+  <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+    {error ? (
+      <Alert color="failure">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm">{error}</span>
+          <button type="button" onClick={onDismissError} aria-label="Close Error">
+            <LuX />
+          </button>
+        </div>
+      </Alert>
+    ) : null}
+    {success ? (
+      <Alert color="success">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm">{success}</span>
+          <button type="button" onClick={onDismissSuccess} aria-label="Close Success">
+            <LuX />
+          </button>
+        </div>
+      </Alert>
+    ) : null}
+  </div>
+);
+
+FloatingAlerts.propTypes = {
+  error: PropTypes.string.isRequired,
+  success: PropTypes.string.isRequired,
+  onDismissError: PropTypes.func.isRequired,
+  onDismissSuccess: PropTypes.func.isRequired,
+};
 
 const formatCourseOption = (course) => {
   const bits = [course.courseId, course.name].filter(Boolean);
@@ -182,7 +254,7 @@ const StaffCoursePage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState({});
-  const [searchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [courseForm, setCourseForm] = useState(buildInitialCourseForm(selectedFaculty || "FOC"));
   const [courseIdLookup, setCourseIdLookup] = useState("");
@@ -243,6 +315,12 @@ const StaffCoursePage = () => {
       () => courseService.getCourses(),
       silent ? "" : "Course list refreshed."
     );
+
+    if (response) {
+      setCourses(extractArray(response));
+    }
+  };
+
   useEffect(() => {
     const loadInitialCourses = async () => {
       setLoading("listCourses", true);
@@ -259,8 +337,6 @@ const StaffCoursePage = () => {
       }
     };
 
-  useEffect(() => {
-    handleLoadCourses(true);
     loadInitialCourses();
   }, []);
 
@@ -523,28 +599,12 @@ const StaffCoursePage = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
-          {error ? (
-            <Alert color="failure">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{error}</span>
-                <button type="button" onClick={() => setError("")} aria-label="Close Error">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-          {success ? (
-            <Alert color="success">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{success}</span>
-                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-        </div>
+        <FloatingAlerts
+          error={error}
+          success={success}
+          onDismissError={() => setError("")}
+          onDismissSuccess={() => setSuccess("")}
+        />
       </div>
     );
   }
@@ -644,17 +704,9 @@ const StaffCoursePage = () => {
             <Badge color="info" className="px-3 py-1">{selectedFaculty}</Badge>
           </div>
 
-          {isListLoading && visibleCourses.length === 0 ? (
-            <CourseTableSkeleton />
-          ) : filteredCourses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-14 text-center dark:border-slate-600 dark:bg-slate-800/40">
-              <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-200">
-                <FaSearch size={24} />
-              </div>
-              <p className="mt-4 text-lg font-semibold text-slate-800 dark:text-slate-100">No courses match the current view</p>
-              <p className="mt-1 text-sm text-slate-500">Try another search term or create a new course for this faculty.</p>
-            </div>
-          ) : (
+          {isListLoading && visibleCourses.length === 0 && <CourseTableSkeleton />}
+          {!isListLoading && filteredCourses.length === 0 && <CourseEmptyState />}
+          {!isListLoading && filteredCourses.length > 0 && (
             <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
               <Table hoverable>
                 <Table.Head className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
@@ -667,8 +719,8 @@ const StaffCoursePage = () => {
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
                 <Table.Body className="divide-y">
-                  {filteredCourses.map((course, index) => (
-                    <Table.Row key={course.courseId || index} className="bg-white even:bg-slate-50/60 hover:bg-cyan-50/50 dark:bg-slate-900 dark:even:bg-slate-800/70 dark:hover:bg-slate-800">
+                  {filteredCourses.map((course) => (
+                    <Table.Row key={course.courseId} className="bg-white even:bg-slate-50/60 hover:bg-cyan-50/50 dark:bg-slate-900 dark:even:bg-slate-800/70 dark:hover:bg-slate-800">
                       <Table.Cell className="font-semibold text-slate-800 dark:text-slate-100">{course.courseId || "-"}</Table.Cell>
                       <Table.Cell>
                         <div>
@@ -889,28 +941,12 @@ const StaffCoursePage = () => {
           </Modal.Body>
         </Modal>
 
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
-          {error ? (
-            <Alert color="failure">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{error}</span>
-                <button type="button" onClick={() => setError("")} aria-label="Close Error">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-          {success ? (
-            <Alert color="success">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm">{success}</span>
-                <button type="button" onClick={() => setSuccess("")} aria-label="Close Success">
-                  <LuX />
-                </button>
-              </div>
-            </Alert>
-          ) : null}
-        </div>
+        <FloatingAlerts
+          error={error}
+          success={success}
+          onDismissError={() => setError("")}
+          onDismissSuccess={() => setSuccess("")}
+        />
       </div>
     </div>
   );

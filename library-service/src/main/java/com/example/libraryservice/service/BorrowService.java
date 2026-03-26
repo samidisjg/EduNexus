@@ -81,22 +81,25 @@ public class BorrowService {
         bookRepository.save(book);
 
         long daysLate = ChronoUnit.DAYS.between(borrowRecord.getDueDate(), returnedDate);
-        if (daysLate > 0) {
-            log.info("Late return detected. borrowId={}, studentId={}, daysLate={}",
-                    borrowId, borrowRecord.getStudentId(), daysLate);
+        boolean sameDayReturn = borrowRecord.getBorrowDate() != null && borrowRecord.getBorrowDate().isEqual(returnedDate);
+        long chargeableDays = daysLate > 0 ? daysLate : (sameDayReturn ? 1 : 0);
+
+        if (chargeableDays > 0) {
+            log.info("Chargeable return detected. borrowId={}, studentId={}, daysLate={}, sameDayReturn={}, chargeableDays={}",
+                    borrowId, borrowRecord.getStudentId(), daysLate, sameDayReturn, chargeableDays);
             FineCalculationResponse fineResponse = fineClientService.calculateFine(
                     FineCalculationRequest.builder()
                             .borrowId(borrowRecord.getId())
                             .studentId(borrowRecord.getStudentId())
-                            .daysLate(daysLate)
+                            .daysLate(chargeableDays)
                             .build()
             );
 
             borrowRecord.setFineId(fineResponse.getFineId());
             borrowRecord.setFineAmount(fineResponse.getAmount());
             borrowRecord.setFineStatus(fineResponse.getStatus() != null ? fineResponse.getStatus() : FineStatus.PENDING);
-            log.info("Fine created for late return. borrowId={}, fineId={}, fineAmount={}, fineStatus={}",
-                    borrowId, borrowRecord.getFineId(), borrowRecord.getFineAmount(), borrowRecord.getFineStatus());
+            log.info("Fine created for chargeable return. borrowId={}, fineId={}, fineAmount={}, fineStatus={}, chargeableDays={}",
+                    borrowId, borrowRecord.getFineId(), borrowRecord.getFineAmount(), borrowRecord.getFineStatus(), chargeableDays);
         } else {
             borrowRecord.setFineStatus(FineStatus.NONE);
             log.info("Book returned on time. borrowId={}", borrowId);

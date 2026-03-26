@@ -1,0 +1,181 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: edunexus-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: edunexus123
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pedunexus123"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+    networks:
+      - edunexus-network
+
+  user-service:
+    build:
+      context: ./UserService
+    container_name: edunexus-user-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 9091
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: user_db
+      DB_USERNAME: root
+      DB_PASSWORD: edunexus123
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "9091:9091"
+    networks:
+      - edunexus-network
+
+  student-service:
+    build:
+      context: ./StudentService
+    container_name: edunexus-student-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 9095
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: student_db
+      DB_USERNAME: root
+      DB_PASSWORD: edunexus123
+      INTERNAL_API_KEY: edunexus-internal-key
+      COURSE_SERVICE_URL: http://course-service:9096
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "9095:9095"
+    networks:
+      - edunexus-network
+
+  course-service:
+    build:
+      context: ./CourseService
+    container_name: edunexus-course-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: course_db
+      DB_USERNAME: root
+      DB_PASSWORD: edunexus123
+      INTERNAL_API_KEY: edunexus-internal-key
+      STUDENT_URL: http://student-service:9095/students-service
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "9096:9096"
+    networks:
+      - edunexus-network
+
+  library-service:
+    build:
+      context: ./library-service
+    container_name: edunexus-library-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8083
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: library_db
+      DB_USERNAME: root
+      DB_PASSWORD: edunexus123
+      INTERNAL_API_KEY: edunexus-internal-key
+      GATEWAY_API_KEY: edunexus-gateway-key
+      FINE_SERVICE_BASE_URL: http://fine-service:8084/fine-service
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "8083:8083"
+    networks:
+      - edunexus-network
+
+  fine-service:
+    build:
+      context: ./fine-service
+    container_name: edunexus-fine-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8084
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: finedb
+      DB_USERNAME: root
+      DB_PASSWORD: edunexus123
+      INTERNAL_API_KEY: edunexus-internal-key
+      GATEWAY_API_KEY: edunexus-gateway-key
+      LIBRARY_SERVICE_BASE_URL: http://library-service:8083/library-service
+      FINE_AMOUNT_PER_DAY: 100.00
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "8084:8084"
+    networks:
+      - edunexus-network
+
+  api-gateway:
+    build:
+      context: ./Api-Gateway
+    container_name: edunexus-api-gateway
+    depends_on:
+      user-service:
+        condition: service_started
+      student-service:
+        condition: service_started
+      course-service:
+        condition: service_started
+      library-service:
+        condition: service_started
+      fine-service:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8081
+      USER_SERVICE_URL: http://user-service:9091/user-service
+      USER_SERVICE_ROUTE_URI: http://user-service:9091
+      STUDENT_SERVICE_ROUTE_URI: http://student-service:9095
+      COURSE_SERVICE_ROUTE_URI: http://course-service:9096
+      LIBRARY_SERVICE_ROUTE_URI: http://library-service:8083
+      FINE_SERVICE_ROUTE_URI: http://fine-service:8084
+      GATEWAY_API_KEY: edunexus-gateway-key
+      GATEWAY_ALLOWED_ORIGIN_PATTERN: http://localhost:5173
+    ports:
+      - "8081:8081"
+    networks:
+      - edunexus-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8081/api-gateway
+    container_name: edunexus-frontend
+    depends_on:
+      api-gateway:
+        condition: service_started
+    ports:
+      - "5173:80"
+    networks:
+      - edunexus-network
+
+volumes:
+  mysql_data:
+
+networks:
+  edunexus-network:
+    driver: bridge
