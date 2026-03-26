@@ -21,9 +21,9 @@ import {
   FaEdit,
   FaLayerGroup,
   FaPlusCircle,
-  FaSearch,
   FaSignal,
   FaUniversity,
+  FaSearch,
 } from "react-icons/fa";
 import { LuFilter, LuRefreshCcw, LuSearch, LuView, LuX } from "react-icons/lu";
 import courseService from "../services/course.service";

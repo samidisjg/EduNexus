@@ -26,7 +26,6 @@ const dashboardSections = [
     icon: FaUsers,
     children: [
       { to: "/dashboard/student/course", label: "Course", icon: FaBook },
-      { to: "/dashboard/student/library", label: "Library", icon: FaSchool },
     ],
   },
   {
@@ -101,15 +100,20 @@ const SideNav = ({ isOpen, onToggle }) => {
   const renderNavGroup = (item, depth) => {
     const ItemIcon = item.icon;
     const isExpanded = openSections[item.key];
-    const isActive = item.to ? location.pathname === item.to : false;
+    const isActive = item.to
+      ? location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
+      : false;
 
     return (
       <div key={item.key || item.label} className="space-y-1">
-        {item.to ? renderNavLink(item, isActive, true) : null}
         <button
           type="button"
           onClick={() => toggleSection(item.key)}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
+            isActive
+              ? "text-cyan-600 dark:text-cyan-400"
+              : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+          }`}
         >
           <ItemIcon className="shrink-0 text-base" />
           <span className="flex-1">{item.label}</span>
