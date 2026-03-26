@@ -106,7 +106,8 @@ jobs:
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "matrix={\"include\":$matrix}" >> "$GITHUB_OUTPUT"
+          compact_matrix=$(jq -c --argjson include "$matrix" '{include: $include}' <<< '{}')
+          echo "matrix=$compact_matrix" >> "$GITHUB_OUTPUT"
 
   deploy:
     needs: detect-changes
