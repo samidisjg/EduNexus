@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import PropTypes from "prop-types";
 import { Alert, Button, Card, Label, Select, TextInput } from "flowbite-react";
 import { HiOutlineCalendar, HiOutlineDownload, HiRefresh, HiSwitchHorizontal } from "react-icons/hi";
@@ -28,6 +29,20 @@ const LibraryBorrowingsPanel = ({
   onBorrowingsFilterSubmit,
   borrowingsLoading,
 }) => {
+  const dueDateInputRef = useRef(null);
+
+  const openDueDatePicker = () => {
+    const input = dueDateInputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.focus();
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+    }
+  };
+
   return (
     <div className="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
       <div className="space-y-6">
@@ -76,15 +91,26 @@ const LibraryBorrowingsPanel = ({
 
             <div>
               <Label value="Due date" />
-              <TextInput
-                name="dueDate"
-                type="date"
-                value={borrowForm.dueDate}
-                onChange={onBorrowChange}
-                required
-                icon={HiOutlineCalendar}
-                className="library-input"
-              />
+              <div className="relative">
+                <input
+                  ref={dueDateInputRef}
+                  name="dueDate"
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={borrowForm.dueDate}
+                  onChange={onBorrowChange}
+                  required
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pr-12 text-sm text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500"
+                />
+                <button
+                  type="button"
+                  onClick={openDueDatePicker}
+                  aria-label="Open due date picker"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+                >
+                  <HiOutlineCalendar className="text-lg" />
+                </button>
+              </div>
             </div>
 
             <Button type="submit" isProcessing={borrowWorking}>
