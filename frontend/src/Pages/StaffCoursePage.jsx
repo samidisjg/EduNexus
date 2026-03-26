@@ -22,6 +22,7 @@ import {
   FaPlusCircle,
   FaSignal,
   FaUniversity,
+  FaSearch,
 } from "react-icons/fa";
 import { LuFilter, LuRefreshCcw, LuSearch, LuView, LuX } from "react-icons/lu";
 import courseService from "../services/course.service";
@@ -182,7 +183,7 @@ const StaffCoursePage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState({});
-  const [searchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [courseForm, setCourseForm] = useState(buildInitialCourseForm(selectedFaculty || "FOC"));
   const [courseIdLookup, setCourseIdLookup] = useState("");
@@ -243,25 +244,14 @@ const StaffCoursePage = () => {
       () => courseService.getCourses(),
       silent ? "" : "Course list refreshed."
     );
-  useEffect(() => {
-    const loadInitialCourses = async () => {
-      setLoading("listCourses", true);
-      setError("");
-      setSuccess("");
-      try {
-        const response = await courseService.getCourses();
-        setCourses(extractArray(response));
-        setSuccess("Course list loaded.");
-      } catch (actionError) {
-        setError(actionError.message || "Request failed.");
-      } finally {
-        setLoading("listCourses", false);
-      }
-    };
+
+    if (response) {
+      setCourses(extractArray(response));
+    }
+  };
 
   useEffect(() => {
     handleLoadCourses(true);
-    loadInitialCourses();
   }, []);
 
   useEffect(() => {

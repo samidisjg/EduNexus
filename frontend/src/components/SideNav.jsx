@@ -76,6 +76,78 @@ const SideNav = ({ isOpen, onToggle }) => {
 
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
 
+  const isNavItemActive = (item) => {
+    if (!item?.to) {
+      return false;
+    }
+
+    if (item.to === "/dashboard/staff/course") {
+      return location.pathname === item.to || location.pathname.startsWith("/dashboard/staff/course/");
+    }
+
+    return location.pathname === item.to;
+  };
+
+  const renderNavItems = (items, depth = 0) =>
+    items.map((item) => {
+      const ItemIcon = item.icon;
+      const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+      const itemKey = item.key || item.to || `${item.label}-${depth}`;
+      const isActive = isNavItemActive(item);
+
+      if (hasChildren) {
+        const isOpenSection = openSections[itemKey] ?? false;
+
+        return (
+          <div key={itemKey} className="space-y-1">
+            <div className="flex items-center gap-2">
+              {item.to ? (
+                <Link
+                  to={item.to}
+                  className={`flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
+                  }`}
+                >
+                  <ItemIcon className="text-sm shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              ) : (
+                <div className="flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                  <ItemIcon className="text-sm shrink-0" />
+                  <span>{item.label}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => toggleSection(itemKey)}
+                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
+              >
+                <FaChevronDown className={`text-xs transition-transform ${isOpenSection ? "rotate-180" : "rotate-0"}`} />
+              </button>
+            </div>
+            {isOpenSection ? <div className="space-y-1 pl-4">{renderNavItems(item.children, depth + 1)}</div> : null}
+          </div>
+        );
+      }
+
+      return (
+        <Link
+          key={itemKey}
+          to={item.to}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+            isActive
+              ? "bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+              : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
+          }`}
+        >
+          <ItemIcon className="text-sm shrink-0" />
+          <span>{item.label}</span>
+        </Link>
+      );
+    });
+
   return (
     <>
       <div
