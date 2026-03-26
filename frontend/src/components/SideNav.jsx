@@ -101,20 +101,40 @@ const SideNav = ({ isOpen, onToggle }) => {
   const renderNavGroup = (item, depth) => {
     const ItemIcon = item.icon;
     const isExpanded = openSections[item.key];
-    const isActive = item.to ? location.pathname === item.to : false;
+    const isActive = item.to
+      ? location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
+      : false;
 
     return (
       <div key={item.key || item.label} className="space-y-1">
-        {item.to ? renderNavLink(item, isActive, true) : null}
-        <button
-          type="button"
-          onClick={() => toggleSection(item.key)}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
-        >
-          <ItemIcon className="shrink-0 text-base" />
-          <span className="flex-1">{item.label}</span>
-          <FaChevronDown className={`text-xs transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`} />
-        </button>
+        {item.to ? (
+          <div className="flex items-center gap-2">
+            <Link
+              to={item.to}
+              className={`${getNavItemClasses(isActive)} flex-1`}
+            >
+              <ItemIcon className="shrink-0 text-base" />
+              <span className="flex-1">{item.label}</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => toggleSection(item.key)}
+              className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
+            >
+              <FaChevronDown className={`text-xs transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toggleSection(item.key)}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+          >
+            <ItemIcon className="shrink-0 text-base" />
+            <span className="flex-1">{item.label}</span>
+            <FaChevronDown className={`text-xs transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`} />
+          </button>
+        )}
         {isExpanded ? <div className={depth >= 0 ? "space-y-1 pl-6" : "space-y-1"}>{renderNavItems(item.children, depth + 1)}</div> : null}
       </div>
     );
