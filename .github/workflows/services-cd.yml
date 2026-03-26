@@ -15,6 +15,7 @@ on:
       - ".github/workflows/services-cd.yml"
 
 permissions:
+  id-token: write
   contents: read
   deployments: write
 
