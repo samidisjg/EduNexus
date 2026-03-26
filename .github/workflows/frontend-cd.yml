@@ -12,10 +12,14 @@ on:
 permissions:
   id-token: write
   contents: read
+  deployments: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: frontend-production
+      url: ${{ vars.FRONTEND_APP_URL }}
 
     env:
       IMAGE_TAG: ${{ github.sha }}

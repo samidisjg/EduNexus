@@ -80,6 +80,24 @@ public class StudentManagementServiceImpl implements StudentManagementService {
                             .build());
         }
 
+        if (requestDto.getYear() == null || requestDto.getYear() < 1 || requestDto.getYear() > 4) {
+            log.warn("Student creation failed: invalid year. studentId={}, year={}", studentId, requestDto.getYear());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(StudentCreateResponseDto.builder()
+                            .success(false)
+                            .message("year must be between 1 and 4")
+                            .build());
+        }
+
+        if (requestDto.getSemester() == null || requestDto.getSemester() < 1 || requestDto.getSemester() > 2) {
+            log.warn("Student creation failed: invalid semester. studentId={}, semester={}", studentId, requestDto.getSemester());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(StudentCreateResponseDto.builder()
+                            .success(false)
+                            .message("semester must be 1 or 2")
+                            .build());
+        }
+
         // Duplicate studentId check
         if (studentRepository.existsByStudentId(studentId)) {
             log.warn("Student creation blocked: studentId already exists. studentId={}", studentId);
@@ -111,6 +129,7 @@ public class StudentManagementServiceImpl implements StudentManagementService {
                 .phone(safeTrim(requestDto.getPhone()))
                 .department(safeTrim(requestDto.getDepartment()))
                 .year(requestDto.getYear())
+                .semester(requestDto.getSemester())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -171,6 +190,7 @@ public class StudentManagementServiceImpl implements StudentManagementService {
                 .phone(s.getPhone())
                 .department(s.getDepartment())
                 .year(s.getYear())
+                .semester(s.getSemester())
                 .createdAt(s.getCreatedAt())
                 .build();
     }
@@ -182,8 +202,14 @@ public class StudentManagementServiceImpl implements StudentManagementService {
         if (f.getSize() < 1 || f.getSize() > 100) {
             throw new IllegalArgumentException("size must be between 1 and 100");
         }
+        if (f.getYear() != null && (f.getYear() < 1 || f.getYear() > 4)) {
+            throw new IllegalArgumentException("year must be between 1 and 4");
+        }
+        if (f.getSemester() != null && (f.getSemester() < 1 || f.getSemester() > 2)) {
+            throw new IllegalArgumentException("semester must be 1 or 2");
+        }
 
-        List<String> allowedSortFields = List.of("createdAt", "studentId", "name", "email", "department", "year");
+        List<String> allowedSortFields = List.of("createdAt", "studentId", "name", "email", "department", "year", "semester");
         if (!allowedSortFields.contains(f.getSortBy())) {
             throw new IllegalArgumentException("Invalid sortBy. Allowed: " + allowedSortFields);
         }

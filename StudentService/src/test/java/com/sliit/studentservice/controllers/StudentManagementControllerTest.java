@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +55,7 @@ class StudentManagementControllerTest {
 
         mockMvc.perform(post("/students")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"studentId\":\"STU001\",\"name\":\"Alice\",\"email\":\"alice@sliit.lk\"}"))
+                        .content("{\"studentId\":\"STU001\",\"name\":\"Alice\",\"email\":\"alice@sliit.lk\",\"year\":3,\"semester\":1}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.studentId").value("STU001"));
@@ -135,5 +136,45 @@ class StudentManagementControllerTest {
                 .andExpect(jsonPath("$.enrolledCount").value(2));
 
         verify(studentManagementService, times(1)).getEnrolledStudentCount("C001");
+    }
+
+    @Test
+    void getStudentsListUsesDefaultQueryParamsWhenNoneProvided() throws Exception {
+        StudentResponseDto response = StudentResponseDto.builder()
+                .success(true)
+                .message("Students fetched successfully")
+                .totalElements(1)
+                .totalPages(1)
+                .page(0)
+                .size(10)
+                .build();
+
+        when(studentManagementService.getStudentsList(any())).thenReturn(ResponseEntity.ok(response));
+
+        mockMvc.perform(get("/students"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        verify(studentManagementService).getStudentsList(any());
+    }
+
+    @Test
+    void addStudentPropagatesAcceptedStatusFromService() throws Exception {
+        StudentCreateResponseDto response = StudentCreateResponseDto.builder()
+                .success(false)
+                .message("Queued")
+                .studentId("STU002")
+                .build();
+
+        when(studentManagementService.addStudent(any())).thenReturn(ResponseEntity.status(HttpStatus.ACCEPTED).body(response));
+
+        mockMvc.perform(post("/students")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"studentId\":\"STU002\",\"name\":\"Bob\",\"email\":\"bob@sliit.lk\",\"year\":2,\"semester\":2}"))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("Queued"))
+                .andExpect(header().doesNotExist("Location"));
+
+        verify(studentManagementService).addStudent(any());
     }
 }

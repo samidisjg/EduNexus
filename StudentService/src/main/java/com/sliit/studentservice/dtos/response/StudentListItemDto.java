@@ -14,5 +14,6 @@ public class StudentListItemDto {
     private String phone;
     private String department;
     private Integer year;
+    private Integer semester;
     private LocalDateTime createdAt;
 }

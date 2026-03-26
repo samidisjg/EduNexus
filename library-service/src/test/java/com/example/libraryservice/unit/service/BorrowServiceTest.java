@@ -143,6 +143,47 @@ class BorrowServiceTest {
     }
 
     @Test
+    void returnBookShouldCreateMinimumFineForSameDayReturn() {
+        LocalDate today = LocalDate.now();
+
+        BorrowRecord borrowRecord = BorrowRecord.builder()
+                .id(12L)
+                .bookId(6L)
+                .studentId("STU-4")
+                .borrowDate(today)
+                .dueDate(today.plusDays(7))
+                .status(BorrowStatus.BORROWED)
+                .fineStatus(FineStatus.NONE)
+                .build();
+        Book book = Book.builder()
+                .id(6L)
+                .availableCopies(2)
+                .build();
+
+        when(borrowRecordRepository.findById(12L)).thenReturn(Optional.of(borrowRecord));
+        when(bookService.getBookEntityById(6L)).thenReturn(book);
+        when(fineClientService.calculateFine(any())).thenReturn(FineCalculationResponse.builder()
+                .fineId("FINE-22223333")
+                .amount(new BigDecimal("100.00"))
+                .status(FineStatus.PENDING)
+                .build());
+        when(borrowRecordRepository.save(any(BorrowRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        BorrowResponse response = borrowService.returnBook(12L);
+
+        assertEquals(BorrowStatus.RETURNED, response.getStatus());
+        assertEquals("FINE-22223333", response.getFineId());
+        assertEquals(new BigDecimal("100.00"), response.getFineAmount());
+        assertEquals(FineStatus.PENDING, response.getFineStatus());
+        assertEquals(3, book.getAvailableCopies());
+
+        ArgumentCaptor<com.example.libraryservice.dto.request.FineCalculationRequest> requestCaptor =
+                ArgumentCaptor.forClass(com.example.libraryservice.dto.request.FineCalculationRequest.class);
+        verify(fineClientService).calculateFine(requestCaptor.capture());
+        assertEquals(1L, requestCaptor.getValue().getDaysLate());
+    }
+
+    @Test
     void updateFineStatusShouldRejectMismatchedFineId() {
         BorrowRecord borrowRecord = BorrowRecord.builder()
                 .id(22L)

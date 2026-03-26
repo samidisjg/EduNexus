@@ -33,19 +33,41 @@ import {
 } from "react-icons/lu";
 import studentService from "../services/student.service";
 
+const facultyOptions = [
+  { value: "FOC", label: "FOC - Faculty of Computing" },
+  { value: "FOE", label: "FOE - Faculty of Engineering" },
+  { value: "FOM", label: "FOM - Faculty of Management" },
+  { value: "FOH", label: "FOH - Faculty of Humanities" },
+  { value: "FOA", label: "FOA - Faculty of Architecture" },
+];
+
+const facultyLabelMap = facultyOptions.reduce((map, faculty) => {
+  map[faculty.value] = faculty.label;
+  return map;
+}, {});
+
+const facultyCodeMap = facultyOptions.reduce((map, faculty) => {
+  map[faculty.value] = faculty.value;
+  map[faculty.label] = faculty.value;
+  map[faculty.label.replace(`${faculty.value} - `, "")] = faculty.value;
+  return map;
+}, {});
+
 const initialStudentForm = {
   studentId: "",
   name: "",
   email: "",
   phone: "",
-  department: "",
+  department: "FOC",
   year: 1,
+  semester: 1,
 };
 
 const initialFilters = {
   search: "",
   department: "",
   year: "",
+  semester: "",
   page: 0,
   size: 10,
   sortBy: "createdAt",
@@ -57,13 +79,15 @@ const studentColumns = [
   { key: "name", label: "Name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
-  { key: "department", label: "Department" },
+  { key: "department", label: "Faculty" },
   { key: "year", label: "Year" },
+  { key: "semester", label: "Semester" },
   { key: "createdAt", label: "Admission Date" },
 ];
 
 const listPriorityKeys = ["students", "enrollments", "content", "items", "results"];
-const sortByOptions = ["createdAt", "name", "studentId", "department", "year"];
+const courseListPriorityKeys = ["courses", "content", "items", "results", "data", "body"];
+const sortByOptions = ["createdAt", "name", "studentId", "department", "year", "semester"];
 const sortDirOptions = ["asc", "desc"];
 
 const SummaryCard = ({ title, value, subtitle, icon: Icon }) => (
@@ -107,8 +131,10 @@ const StudentServicePage = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedStudentIdForEnrollments, setSelectedStudentIdForEnrollments] = useState("");
+  const [selectedStudentForEnrollments, setSelectedStudentForEnrollments] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
   const [enrollmentColumns, setEnrollmentColumns] = useState([]);
+  const [availableCourses, setAvailableCourses] = useState([]);
 
   const [filters, setFilters] = useState(initialFilters);
   const [pageMeta, setPageMeta] = useState({
@@ -168,6 +194,20 @@ const StudentServicePage = () => {
     return [];
   };
 
+  const normalizeCourseRows = (payload) => {
+    const data = payload?.body ?? payload?.data ?? payload;
+
+    if (Array.isArray(data)) return data;
+
+    if (data && typeof data === "object") {
+      for (const key of courseListPriorityKeys) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+    }
+
+    return [];
+  };
+
   const normalizeObject = (payload) => {
     const data = payload?.body ?? payload?.data ?? payload;
     if (data && typeof data === "object" && !Array.isArray(data)) return data;
@@ -208,11 +248,20 @@ const StudentServicePage = () => {
   };
 
   const formatDepartmentTone = (department) => {
-    const value = `${department || ""}`.toLowerCase();
-    if (value.includes("computer")) return "info";
-    if (value.includes("engineering")) return "purple";
-    if (value.includes("business")) return "success";
-    return "gray";
+    switch (`${department || ""}`.toUpperCase()) {
+      case "FOC":
+        return "info";
+      case "FOE":
+        return "purple";
+      case "FOM":
+        return "success";
+      case "FOH":
+        return "warning";
+      case "FOA":
+        return "indigo";
+      default:
+        return "gray";
+    }
   };
 
   const getInitials = (name) => {
@@ -220,6 +269,10 @@ const StudentServicePage = () => {
     const words = name.split(" ").filter(Boolean);
     return `${words[0]?.[0] || ""}${words[1]?.[0] || ""}`.toUpperCase();
   };
+
+  const getFacultyLabel = (department) => facultyLabelMap[department] || department || "-";
+
+  const getFacultyCode = (department) => facultyCodeMap[department] || `${department || ""}`.split(" - ")[0] || department;
 
   const getSeatsFromPayload = (payload) => {
     const data = payload?.body ?? payload?.data ?? payload;
@@ -318,7 +371,12 @@ const StudentServicePage = () => {
     event.preventDefault();
     const response = await runAction(
       "addStudent",
-      () => studentService.addStudent({ ...studentForm, year: Number(studentForm.year) }),
+      () =>
+        studentService.addStudent({
+          ...studentForm,
+          year: Number(studentForm.year),
+          semester: Number(studentForm.semester),
+        }),
       "Student added successfully."
     );
 
@@ -341,6 +399,62 @@ const StudentServicePage = () => {
     setShowStudentModal(true);
   };
 
+  const loadMatchingCourses = async (student, rows = []) => {
+    if (!student) {
+      setAvailableCourses([]);
+      return;
+    }
+
+    const response = await runAction(
+      "loadCoursesForEnrollment",
+      () => studentService.getCourses(),
+      "Courses available for enrollment loaded."
+    );
+
+    if (!response) return;
+
+    const matchingCourses = normalizeCourseRows(response).filter((course) =>
+      course &&
+      course.faculty === getFacultyCode(student.department) &&
+      Number(course.year) === Number(student.year) &&
+      Number(course.semester) === Number(student.semester) &&
+      course.status === "ACTIVE"
+    );
+
+    const enrolledCourseIds = new Set(
+      rows
+        .map((row) => row?.courseId || row?.course_code || row?.courseID)
+        .filter(Boolean)
+    );
+
+    const availabilityChecks = await Promise.all(
+      matchingCourses.map(async (course) => {
+        if (enrolledCourseIds.has(course.courseId)) {
+          return null;
+        }
+
+        try {
+          const availability = await studentService.getCourseAvailability(course.courseId);
+          const seats = getSeatsFromPayload(availability);
+          const available = availability?.available === true || (typeof seats === "number" && seats > 0);
+
+          if (!available) {
+            return null;
+          }
+
+          return {
+            ...course,
+            remainingSeats: typeof seats === "number" ? seats : course.remainingSeats,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    setAvailableCourses(availabilityChecks.filter(Boolean));
+  };
+
   const handleViewEnrollments = async (studentId) => {
     const response = await runAction(
       "viewEnrollments",
@@ -358,13 +472,19 @@ const StudentServicePage = () => {
       }
     });
 
+    const selectedStudentRow = students.find((student) => student.studentId === studentId) || null;
+
     setSelectedStudentIdForEnrollments(studentId);
+    setSelectedStudentForEnrollments(selectedStudentRow);
     setEnrollments(rows);
     setEnrollmentColumns([...columnsSet]);
     setShowEnrollPanel(false);
     setEnrollData({ studentId, courseId: "" });
     setAvailableSeats(null);
+    setAvailableCourses([]);
     setShowEnrollmentsModal(true);
+
+    await loadMatchingCourses(selectedStudentRow, rows);
   };
 
   const handleCheckAvailableSeats = async () => {
@@ -404,14 +524,21 @@ const StudentServicePage = () => {
   const activeFilterChips = useMemo(() => {
     const chips = [];
     if (filters.search.trim()) chips.push({ key: "search", label: `Search: ${filters.search}` });
-    if (filters.department.trim()) chips.push({ key: "department", label: `Department: ${filters.department}` });
+    if (filters.department.trim()) {
+      chips.push({
+        key: "department",
+        label: `Faculty: ${facultyLabelMap[filters.department] || filters.department}`,
+      });
+    }
     if (`${filters.year}`.trim()) chips.push({ key: "year", label: `Year: ${filters.year}` });
+    if (`${filters.semester}`.trim()) chips.push({ key: "semester", label: `Semester: ${filters.semester}` });
     return chips;
   }, [filters]);
 
   const summary = useMemo(() => {
     const departments = new Set(students.map((student) => student.department).filter(Boolean));
     const finalYear = students.filter((student) => Number(student.year) >= 4).length;
+    const semesterTwo = students.filter((student) => Number(student.semester) === 2).length;
     const recentCount = students.filter((student) => {
       const d = new Date(student.createdAt);
       return !Number.isNaN(d.getTime()) && Date.now() - d.getTime() <= 1000 * 60 * 60 * 24 * 30;
@@ -421,6 +548,7 @@ const StudentServicePage = () => {
       totalStudents: pageMeta.totalElements || students.length,
       departments: departments.size,
       finalYear,
+      semesterTwo,
       recentlyAdded: recentCount,
     };
   }, [students, pageMeta.totalElements]);
@@ -450,9 +578,9 @@ const StudentServicePage = () => {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard title="Total Students" value={summary.totalStudents} subtitle="Across available pages" icon={LuUsers} />
-            <SummaryCard title="Departments" value={summary.departments} subtitle="In current result set" icon={LuListFilter} />
+            <SummaryCard title="Faculties" value={summary.departments} subtitle="In current result set" icon={LuListFilter} />
             <SummaryCard title="Final Year" value={summary.finalYear} subtitle="Year 4 and above" icon={LuGraduationCap} />
-            <SummaryCard title="Recently Added" value={summary.recentlyAdded} subtitle="Last 30 days" icon={LuCalendarClock} />
+            <SummaryCard title="Semester 2" value={summary.semesterTwo} subtitle="Current result set" icon={LuCalendarClock} />
           </div>
         </section>
 
@@ -465,7 +593,7 @@ const StudentServicePage = () => {
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">Filters & Sorting</h2>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <div>
                 <Label value="Search" />
                 <TextInput
@@ -476,12 +604,18 @@ const StudentServicePage = () => {
                 />
               </div>
               <div>
-                <Label value="Department" />
-                <TextInput
+                <Label value="Faculty" />
+                <Select
                   value={filters.department}
                   onChange={(event) => setFilters((prev) => ({ ...prev, department: event.target.value }))}
-                  placeholder="e.g. Computer Science"
-                />
+                >
+                  <option value="">All Faculties</option>
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty.value} value={faculty.value}>
+                      {faculty.label}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <Label value="Year" />
@@ -490,9 +624,23 @@ const StudentServicePage = () => {
                   onChange={(event) => setFilters((prev) => ({ ...prev, year: event.target.value }))}
                 >
                   <option value="">All Years</option>
-                  {[1, 2, 3, 4, 5, 6].map((year) => (
+                  {[1, 2, 3, 4].map((year) => (
                     <option key={year} value={year}>
                       Year {year}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div>
+                <Label value="Semester" />
+                <Select
+                  value={filters.semester}
+                  onChange={(event) => setFilters((prev) => ({ ...prev, semester: event.target.value }))}
+                >
+                  <option value="">All Semesters</option>
+                  {[1, 2].map((semester) => (
+                    <option key={semester} value={semester}>
+                      Semester {semester}
                     </option>
                   ))}
                 </Select>
@@ -582,7 +730,7 @@ const StudentServicePage = () => {
                 <LuSearch size={28} />
               </div>
               <p className="mt-4 text-lg font-semibold text-slate-800 dark:text-slate-100">No students match your filters</p>
-              <p className="mt-1 text-sm text-slate-500">Try changing search, department, year, or sorting options.</p>
+              <p className="mt-1 text-sm text-slate-500">Try changing search, faculty, year, semester, or sorting options.</p>
             </div>
           ) : (
             <>
@@ -620,11 +768,14 @@ const StudentServicePage = () => {
                         </Table.Cell>
                         <Table.Cell>
                           <Badge color={formatDepartmentTone(student.department)}>
-                            {student.department || "-"}
+                            {getFacultyLabel(student.department)}
                           </Badge>
                         </Table.Cell>
                         <Table.Cell>
                           <Badge color="purple">Year {student.year || "-"}</Badge>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Badge color="info">Semester {student.semester || "-"}</Badge>
                         </Table.Cell>
                         <Table.Cell className="text-slate-600">
                           <span className="inline-flex items-center gap-1">
@@ -750,13 +901,17 @@ const StudentServicePage = () => {
                 />
               </div>
               <div>
-                <Label value="Department" />
-                <TextInput
+                <Label value="Faculty" />
+                <Select
                   value={studentForm.department}
                   onChange={(event) => setStudentForm((prev) => ({ ...prev, department: event.target.value }))}
-                  placeholder="Computer Science"
-                  required
-                />
+                >
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty.value} value={faculty.value}>
+                      {faculty.label}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <Label value="Year" />
@@ -764,9 +919,22 @@ const StudentServicePage = () => {
                   value={studentForm.year}
                   onChange={(event) => setStudentForm((prev) => ({ ...prev, year: Number(event.target.value) }))}
                 >
-                  {[1, 2, 3, 4, 5, 6].map((year) => (
+                  {[1, 2, 3, 4].map((year) => (
                     <option key={year} value={year}>
                       Year {year}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div>
+                <Label value="Semester" />
+                <Select
+                  value={studentForm.semester}
+                  onChange={(event) => setStudentForm((prev) => ({ ...prev, semester: Number(event.target.value) }))}
+                >
+                  {[1, 2].map((semester) => (
+                    <option key={semester} value={semester}>
+                      Semester {semester}
                     </option>
                   ))}
                 </Select>
@@ -806,6 +974,7 @@ const StudentServicePage = () => {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-slate-600 dark:text-slate-300">
                 Student ID: <span className="font-semibold">{selectedStudentIdForEnrollments || "-"}</span>
+                {selectedStudentForEnrollments ? ` | ${getFacultyLabel(selectedStudentForEnrollments.department)} | Year ${selectedStudentForEnrollments.year || "-"} | Semester ${selectedStudentForEnrollments.semester || "-"}` : ""}
               </p>
               <Tooltip content="Enroll New Course">
                 <Button color="light" onClick={() => setShowEnrollPanel((prev) => !prev)} aria-label="Enroll New Course">
@@ -819,14 +988,24 @@ const StudentServicePage = () => {
                 <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">Enroll Student to Course</h3>
                 <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
                   <TextInput value={enrollData.studentId} readOnly />
-                  <TextInput
+                  <Select
                     value={enrollData.courseId}
                     onChange={(event) => {
-                      setEnrollData((prev) => ({ ...prev, courseId: event.target.value }));
-                      setAvailableSeats(null);
+                      const nextCourseId = event.target.value;
+                      const selectedCourse = availableCourses.find((course) => course.courseId === nextCourseId);
+                      setEnrollData((prev) => ({ ...prev, courseId: nextCourseId }));
+                      setAvailableSeats(
+                        typeof selectedCourse?.remainingSeats === "number" ? selectedCourse.remainingSeats : null
+                      );
                     }}
-                    placeholder="Course ID (e.g. CS105)"
-                  />
+                  >
+                    <option value="">Select a course</option>
+                    {availableCourses.map((course) => (
+                      <option key={course.courseId} value={course.courseId}>
+                        {course.courseId} - {course.name} (Y{course.year} S{course.semester})
+                      </option>
+                    ))}
+                  </Select>
                   <Tooltip content="Check Available Seats">
                     <Button color="light" onClick={handleCheckAvailableSeats} disabled={actionLoading.checkSeats} aria-label="Check Available Seats">
                       {actionLoading.checkSeats ? <Spinner size="sm" /> : <LuSearch />}
@@ -834,11 +1013,16 @@ const StudentServicePage = () => {
                   </Tooltip>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {availableCourses.length === 0 ? (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                      No new active courses with available seats were found for this student&apos;s faculty, year, and semester.
+                    </p>
+                  ) : null}
                   <Badge color="info">Available Seats: {availableSeats === null ? "N/A" : availableSeats}</Badge>
                   <Button
                     color="light"
                     onClick={handleEnrollStudent}
-                    disabled={actionLoading.enroll || !enrollData.courseId.trim()}
+                    disabled={actionLoading.enroll || !enrollData.courseId.trim() || availableCourses.length === 0}
                   >
                     {actionLoading.enroll ? <Spinner size="sm" /> : <>Enroll Student</>}
                   </Button>

@@ -8,6 +8,7 @@ public class StudentFilterDto {
     private String search;
     private String department;
     private Integer year;
+    private Integer semester;
 
     private Integer page = 0;
     private Integer size = 10;

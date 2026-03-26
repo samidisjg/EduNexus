@@ -33,6 +33,8 @@ public class StudentEntity {
 
     private Integer year;
 
+    private Integer semester;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

@@ -15,6 +15,7 @@ export default defineConfig({
       include: [
         'src/config/api.config.js',
         'src/services/auth.service.js',
+        'src/components/SideNav.jsx',
         'src/Pages/Component.jsx',
         'src/Pages/SignUp.jsx',
         'src/Pages/StaffCoursePage.jsx',

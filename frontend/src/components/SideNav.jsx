@@ -26,7 +26,6 @@ const dashboardSections = [
     icon: FaUsers,
     children: [
       { to: "/dashboard/student/course", label: "Course", icon: FaBook },
-      { to: "/dashboard/student/library", label: "Library", icon: FaSchool },
     ],
   },
   {
@@ -53,6 +52,13 @@ const dashboardSections = [
   },
 ];
 
+const getNavItemClasses = (isActive) =>
+  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+    isActive
+      ? "text-cyan-600 dark:text-cyan-400"
+      : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+  }`;
+
 const SideNav = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,6 +81,56 @@ const SideNav = ({ isOpen, onToggle }) => {
   };
 
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
+
+  const renderNavLink = (item, isActive, isNested = false) => {
+    const ItemIcon = item.icon;
+
+    return (
+      <Link
+        key={`${item.key || item.to || item.label}-link`}
+        to={item.to}
+        className={getNavItemClasses(isActive)}
+      >
+        <ItemIcon className="shrink-0 text-base" />
+        <span className={isNested ? "flex-1" : undefined}>{item.label}</span>
+      </Link>
+    );
+  };
+
+  const renderNavGroup = (item, depth) => {
+    const ItemIcon = item.icon;
+    const isExpanded = openSections[item.key];
+    const isActive = item.to
+      ? location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
+      : false;
+
+    return (
+      <div key={item.key || item.label} className="space-y-1">
+        <button
+          type="button"
+          onClick={() => toggleSection(item.key)}
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
+            isActive
+              ? "text-cyan-600 dark:text-cyan-400"
+              : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+          }`}
+        >
+          <ItemIcon className="shrink-0 text-base" />
+          <span className="flex-1">{item.label}</span>
+          <FaChevronDown className={`text-xs transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`} />
+        </button>
+        {isExpanded ? <div className={depth >= 0 ? "space-y-1 pl-6" : "space-y-1"}>{renderNavItems(item.children, depth + 1)}</div> : null}
+      </div>
+    );
+  };
+
+  const renderNavItems = (items, depth = 0) =>
+    items.map((item) => {
+      const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+      const isActive = item.to ? location.pathname === item.to : false;
+
+      return hasChildren ? renderNavGroup(item, depth) : renderNavLink(item, isActive);
+    });
 
   return (
     <>
@@ -159,24 +215,7 @@ const SideNav = ({ isOpen, onToggle }) => {
 
                     {openSections[section.key] ? (
                       <div className="space-y-1 pl-6">
-                        {section.children.map((item) => {
-                          const ItemIcon = item.icon;
-                          const isActive = location.pathname === item.to;
-                          return (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                                isActive
-                                  ? "text-cyan-600 dark:text-cyan-400"
-                                  : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
-                              }`}
-                            >
-                              <ItemIcon className="text-sm shrink-0" />
-                              <span>{item.label}</span>
-                            </Link>
-                          );
-                        })}
+                        {renderNavItems(section.children, 1)}
                       </div>
                     ) : null}
                   </div>

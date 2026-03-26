@@ -16,4 +16,6 @@ public class StudentCreateRequestDto {
     private String department;
 
     private Integer year;
+
+    private Integer semester;
 }
