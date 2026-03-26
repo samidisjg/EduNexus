@@ -33,16 +33,20 @@ class AuthService {
         }
       );
 
-      const data = await response.json();
+      let data = null;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Sign up failed');
+        throw new Error(data?.message || `Sign up failed: ${response.status} ${response.statusText}`);
       }
 
       return {
         success: true,
         data: data,
-        message: data.message || 'User registered successfully',
+        message: data?.message || 'User registered successfully',
       };
     } catch (error) {
       return {

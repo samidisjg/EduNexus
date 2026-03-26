@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Card } from 'flowbite-react';
 import { FaGraduationCap, FaUserGraduate, FaMoneyCheckAlt } from 'react-icons/fa';

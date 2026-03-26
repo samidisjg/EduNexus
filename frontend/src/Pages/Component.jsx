@@ -1,14 +1,7 @@
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { Button, Checkbox, Label, Radio, Select, TextInput, Textarea } from "flowbite-react";
 
-const generateTaskID = () => `TID-${Math.floor(10000 + Math.random() * 90000)}`;
-
 const Component = () => {
-  const navigate = useNavigate();
-  const [taskID, setTaskID] = useState("");
-  const [formData, setFormData] = useState({
+  const formData = {
     TaskID: "",
     Category: "",
     AssignDate: "",
@@ -19,10 +12,7 @@ const Component = () => {
     WorkGroupID: "",
     Location: "",
     DurationDays: "2",
-  });
-
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
+  };
 
   return (
     <div className="min-h-screen mt-20">

@@ -6,6 +6,9 @@ on:
       - "Api-Gateway/**"
       - "library-service/**"
       - "fine-service/**"
+      - "UserService/**"
+      - "StudentService/**"
+      - "CourseService/**"
       - ".github/workflows/services-ci.yml"
       - ".github/workflows/services-sonarcloud.yml"
   push:
@@ -15,6 +18,9 @@ on:
       - "Api-Gateway/**"
       - "library-service/**"
       - "fine-service/**"
+      - "UserService/**"
+      - "StudentService/**"
+      - "CourseService/**"
       - ".github/workflows/services-ci.yml"
       - ".github/workflows/services-sonarcloud.yml"
 
@@ -34,6 +40,15 @@ jobs:
           - service_name: fine-service
             working_directory: fine-service
             image_name: fine-service
+          - service_name: user-service
+            working_directory: UserService
+            image_name: user-service
+          - service_name: student-service
+            working_directory: StudentService
+            image_name: student-service
+          - service_name: course-service
+            working_directory: CourseService
+            image_name: course-service
 
     defaults:
       run:

@@ -54,7 +54,7 @@ class StudentManagementControllerTest {
 
         mockMvc.perform(post("/students")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"studentId\":\"STU001\",\"name\":\"Alice\",\"email\":\"alice@sliit.lk\"}"))
+                        .content("{\"studentId\":\"STU001\",\"name\":\"Alice\",\"email\":\"alice@sliit.lk\",\"year\":3,\"semester\":1}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.studentId").value("STU001"));
