@@ -15,7 +15,6 @@ on:
       - ".github/workflows/services-cd.yml"
 
 permissions:
-  id-token: write
   contents: read
   deployments: write
 
@@ -113,8 +112,6 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ matrix.container_app_name }}-production
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
@@ -146,7 +143,7 @@ jobs:
             exit 1
           fi
 
-      - name: Azure login with OIDC
+      - name: Azure login
         uses: azure/login@v2
         with:
           client-id: ${{ env.AZURE_CLIENT_ID }}
