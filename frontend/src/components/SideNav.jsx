@@ -53,6 +53,13 @@ const dashboardSections = [
   },
 ];
 
+const getNavItemClasses = (isActive) =>
+  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+    isActive
+      ? "text-cyan-600 dark:text-cyan-400"
+      : "text-slate-600 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+  }`;
+
 const SideNav = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -76,76 +83,49 @@ const SideNav = ({ isOpen, onToggle }) => {
 
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
 
-  const isNavItemActive = (item) => {
-    if (!item?.to) {
-      return false;
-    }
+  const renderNavLink = (item, isActive, isNested = false) => {
+    const ItemIcon = item.icon;
 
-    if (item.to === "/dashboard/staff/course") {
-      return location.pathname === item.to || location.pathname.startsWith("/dashboard/staff/course/");
-    }
+    return (
+      <Link
+        key={`${item.key || item.to || item.label}-link`}
+        to={item.to}
+        className={getNavItemClasses(isActive)}
+      >
+        <ItemIcon className="shrink-0 text-base" />
+        <span className={isNested ? "flex-1" : undefined}>{item.label}</span>
+      </Link>
+    );
+  };
 
-    return location.pathname === item.to;
+  const renderNavGroup = (item, depth) => {
+    const ItemIcon = item.icon;
+    const isExpanded = openSections[item.key];
+    const isActive = item.to ? location.pathname === item.to : false;
+
+    return (
+      <div key={item.key || item.label} className="space-y-1">
+        {item.to ? renderNavLink(item, isActive, true) : null}
+        <button
+          type="button"
+          onClick={() => toggleSection(item.key)}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-400"
+        >
+          <ItemIcon className="shrink-0 text-base" />
+          <span className="flex-1">{item.label}</span>
+          <FaChevronDown className={`text-xs transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`} />
+        </button>
+        {isExpanded ? <div className={depth >= 0 ? "space-y-1 pl-6" : "space-y-1"}>{renderNavItems(item.children, depth + 1)}</div> : null}
+      </div>
+    );
   };
 
   const renderNavItems = (items, depth = 0) =>
     items.map((item) => {
-      const ItemIcon = item.icon;
       const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-      const itemKey = item.key || item.to || `${item.label}-${depth}`;
-      const isActive = isNavItemActive(item);
+      const isActive = item.to ? location.pathname === item.to : false;
 
-      if (hasChildren) {
-        const isOpenSection = openSections[itemKey] ?? false;
-
-        return (
-          <div key={itemKey} className="space-y-1">
-            <div className="flex items-center gap-2">
-              {item.to ? (
-                <Link
-                  to={item.to}
-                  className={`flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
-                  }`}
-                >
-                  <ItemIcon className="text-sm shrink-0" />
-                  <span>{item.label}</span>
-                </Link>
-              ) : (
-                <div className="flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300">
-                  <ItemIcon className="text-sm shrink-0" />
-                  <span>{item.label}</span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => toggleSection(itemKey)}
-                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
-              >
-                <FaChevronDown className={`text-xs transition-transform ${isOpenSection ? "rotate-180" : "rotate-0"}`} />
-              </button>
-            </div>
-            {isOpenSection ? <div className="space-y-1 pl-4">{renderNavItems(item.children, depth + 1)}</div> : null}
-          </div>
-        );
-      }
-
-      return (
-        <Link
-          key={itemKey}
-          to={item.to}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-            isActive
-              ? "bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
-              : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
-          }`}
-        >
-          <ItemIcon className="text-sm shrink-0" />
-          <span>{item.label}</span>
-        </Link>
-      );
+      return hasChildren ? renderNavGroup(item, depth) : renderNavLink(item, isActive);
     });
 
   return (

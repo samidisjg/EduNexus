@@ -37,7 +37,7 @@ describe("FineDashboard", () => {
       </Provider>
     );
 
-    expect(screen.getByText(/review fines and record payments/i)).toBeInTheDocument();
+    expect(screen.getByText(/clear fine records, quick payment actions, one calm workspace/i)).toBeInTheDocument();
     await waitFor(() => expect(fineService.getAllFines).toHaveBeenCalled());
   });
 });

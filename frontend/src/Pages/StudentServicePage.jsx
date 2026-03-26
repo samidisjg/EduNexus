@@ -31,7 +31,6 @@ import {
   LuView,
   LuX,
 } from "react-icons/lu";
-import { FaDatabase, FaSearch, FaUserGraduate } from "react-icons/fa";
 import studentService from "../services/student.service";
 
 const facultyOptions = [
@@ -1012,7 +1011,7 @@ const StudentServicePage = () => {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {availableCourses.length === 0 ? (
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                      No new active courses with available seats were found for this student's faculty, year, and semester.
+                      No new active courses with available seats were found for this student&apos;s faculty, year, and semester.
                     </p>
                   ) : null}
                   <Badge color="info">Available Seats: {availableSeats === null ? "N/A" : availableSeats}</Badge>

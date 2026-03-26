@@ -46,14 +46,18 @@ public class OverdueFineSyncService {
 
         for (BorrowRecord borrowRecord : overdueBorrowings) {
             long daysLate = ChronoUnit.DAYS.between(borrowRecord.getDueDate(), today);
-            long chargeableDays = Math.max(daysLate, 1);
+            if (daysLate <= 0) {
+                log.debug("Skipping borrow record that is not yet overdue. borrowId={}, dueDate={}, today={}",
+                        borrowRecord.getId(), borrowRecord.getDueDate(), today);
+                continue;
+            }
 
             try {
                 FineCalculationResponse fineResponse = fineClientService.calculateFine(
                         FineCalculationRequest.builder()
                                 .borrowId(borrowRecord.getId())
                                 .studentId(borrowRecord.getStudentId())
-                                .daysLate(chargeableDays)
+                                .daysLate(daysLate)
                                 .build()
                 );
 
@@ -63,7 +67,7 @@ public class OverdueFineSyncService {
                 borrowRecordRepository.save(borrowRecord);
 
                 log.info("Overdue borrowing synced successfully. borrowId={}, fineId={}, daysLate={}, chargeableDays={}",
-                        borrowRecord.getId(), borrowRecord.getFineId(), daysLate, chargeableDays);
+                        borrowRecord.getId(), borrowRecord.getFineId(), daysLate, daysLate);
             } catch (Exception ex) {
                 log.error("Failed to sync overdue borrowing to Fine Service. borrowId={}", borrowRecord.getId(), ex);
             }
