@@ -40,7 +40,7 @@ describe("SideNav", () => {
     );
 
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /All Programs/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /All Programs/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /FOC/i })).toBeInTheDocument();
   });
 
