@@ -17,50 +17,106 @@ on:
 permissions:
   id-token: write
   contents: read
+  deployments: write
 
 jobs:
-  deploy:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed services
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api_gateway:
+              - 'Api-Gateway/**'
+              - '.github/workflows/services-cd.yml'
+            library_service:
+              - 'library-service/**'
+              - '.github/workflows/services-cd.yml'
+            fine_service:
+              - 'fine-service/**'
+              - '.github/workflows/services-cd.yml'
+            user_service:
+              - 'UserService/**'
+              - '.github/workflows/services-cd.yml'
+            student_service:
+              - 'StudentService/**'
+              - '.github/workflows/services-cd.yml'
+            course_service:
+              - 'CourseService/**'
+              - '.github/workflows/services-cd.yml'
+
+      - name: Build deployment matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          matrix='[]'
+
+          add_service() {
+            matrix=$(jq --arg service_name "$1" \
+                        --arg working_directory "$2" \
+                        --arg image_name "$3" \
+                        --arg container_app_name "$4" \
+                        --arg target_port "$5" \
+                        --arg ingress "$6" \
+                        '. + [{
+                          service_name: $service_name,
+                          working_directory: $working_directory,
+                          image_name: $image_name,
+                          container_app_name: $container_app_name,
+                          target_port: $target_port,
+                          ingress: $ingress
+                        }]' <<<"$matrix")
+          }
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.api_gateway }}" = "true" ]; then
+            add_service "api-gateway" "Api-Gateway" "edunexus-api-gateway" "edunexus-api-gateway" "8081" "external"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.library_service }}" = "true" ]; then
+            add_service "library-service" "library-service" "edunexus-library-service" "edunexus-library-service" "8083" "internal"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.fine_service }}" = "true" ]; then
+            add_service "fine-service" "fine-service" "edunexus-fine-service" "edunexus-fine-service" "8084" "internal"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.user_service }}" = "true" ]; then
+            add_service "user-service" "UserService" "edunexus-user-service" "edunexus-user-service" "9091" "internal"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.student_service }}" = "true" ]; then
+            add_service "student-service" "StudentService" "edunexus-student-service" "edunexus-student-service" "9095" "internal"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.filter.outputs.course_service }}" = "true" ]; then
+            add_service "course-service" "CourseService" "edunexus-course-service" "edunexus-course-service" "9096" "internal"
+          fi
+
+          if [ "$matrix" = "[]" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "matrix={\"include\":$matrix}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ matrix.container_app_name }}-production
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - service_name: api-gateway
-            working_directory: Api-Gateway
-            image_name: api-gateway
-            container_app_name: edunexus-api-gateway
-            target_port: "8081"
-            ingress: external
-          - service_name: library-service
-            working_directory: library-service
-            image_name: library-service
-            container_app_name: edunexus-library-service
-            target_port: "8083"
-            ingress: external
-          - service_name: fine-service
-            working_directory: fine-service
-            image_name: fine-service
-            container_app_name: edunexus-fine-service
-            target_port: "8084"
-            ingress: external
-          - service_name: user-service
-            working_directory: UserService
-            image_name: user-service
-            container_app_name: edunexus-user-service
-            target_port: "9091"
-            ingress: external
-          - service_name: student-service
-            working_directory: StudentService
-            image_name: student-service
-            container_app_name: edunexus-student-service
-            target_port: "9095"
-            ingress: external
-          - service_name: course-service
-            working_directory: CourseService
-            image_name: course-service
-            container_app_name: edunexus-course-service
-            target_port: "9096"
-            ingress: external
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
 
     env:
       IMAGE_TAG: ${{ github.sha }}
@@ -101,6 +157,8 @@ jobs:
         with:
           appSourcePath: ${{ github.workspace }}/${{ matrix.working_directory }}
           acrName: ${{ env.AZURE_CONTAINER_REGISTRY }}
+          acrUsername: ${{ secrets.AZURE_ACR_USERNAME }}
+          acrPassword: ${{ secrets.AZURE_ACR_PASSWORD }}
           containerAppName: ${{ matrix.container_app_name }}
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppEnvironment: ${{ env.AZURE_CONTAINERAPPS_ENV }}

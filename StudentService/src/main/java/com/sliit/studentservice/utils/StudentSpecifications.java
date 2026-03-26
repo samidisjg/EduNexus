@@ -34,6 +34,11 @@ public class StudentSpecifications {
                         criteriaBuilder.equal(root.get("year"), filterDto.getYear()));
             }
 
+            if (filterDto.getSemester() != null) {
+                predicate = criteriaBuilder.and(predicate,
+                        criteriaBuilder.equal(root.get("semester"), filterDto.getSemester()));
+            }
+
             return predicate;
         };
     }

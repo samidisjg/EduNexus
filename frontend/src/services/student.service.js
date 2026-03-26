@@ -78,6 +78,14 @@ class StudentService {
     return parseResponse(response);
   }
 
+
+  async getCourses() {
+    const response = await authenticatedFetch(`${COURSE_BASE_URL}/courses`, {
+      method: "GET",
+    });
+    return parseResponse(response);
+  }
+
   async getCourseAvailability(courseId) {
     const candidateUrls = [
       `${COURSE_BASE_URL}/courses/${courseId}/availability`,

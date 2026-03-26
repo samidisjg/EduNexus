@@ -3,6 +3,7 @@
 This repository now includes baseline CI/CD, containerization, and DevSecOps support for:
 
 - `Api-Gateway`
+- `frontend`
 - `library-service`
 - `fine-service`
 
@@ -17,8 +18,11 @@ This repository now includes baseline CI/CD, containerization, and DevSecOps sup
 ## GitHub Actions Workflows
 
 - `.github/workflows/services-ci.yml`
+- `.github/workflows/frontend-ci.yml`
 - `.github/workflows/services-cd.yml`
+- `.github/workflows/frontend-cd.yml`
 - `.github/workflows/services-sonarcloud.yml`
+- `.github/workflows/frontend-sonarcloud.yml`
 
 ## GitHub Secrets
 
@@ -37,6 +41,7 @@ Add these repository variables:
 - `AZURE_CONTAINER_REGISTRY`
 - `AZURE_CONTAINERAPPS_ENV`
 - `SONAR_ORGANIZATION`
+- `SONAR_FRONTEND_PROJECT_KEY`
 - `SONAR_API_GATEWAY_PROJECT_KEY`
 - `SONAR_LIBRARY_SERVICE_PROJECT_KEY`
 - `SONAR_FINE_SERVICE_PROJECT_KEY`
@@ -49,6 +54,7 @@ Create these resources once in Azure:
 2. Azure Container Registry
 3. Azure Container Apps environment
 4. Container Apps for:
+   - `edunexus-web`
    - `edunexus-api-gateway`
    - `edunexus-library-service`
    - `edunexus-fine-service`
