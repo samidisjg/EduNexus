@@ -108,7 +108,12 @@ const SideNav = ({ isOpen, onToggle }) => {
       <div key={item.key || item.label} className="space-y-1">
         <button
           type="button"
-          onClick={() => toggleSection(item.key)}
+          onClick={() => {
+            toggleSection(item.key);
+            if (item.to) {
+              navigate(item.to);
+            }
+          }}
           className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
             isActive
               ? "text-cyan-600 dark:text-cyan-400"
