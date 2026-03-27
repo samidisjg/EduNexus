@@ -53,19 +53,14 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to Azure Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
-          username: ${{ secrets.AZURE_ACR_USERNAME }}
-          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+        shell: bash
+        run: az acr login --name "$AZURE_CONTAINER_REGISTRY"
 
       - name: Build and deploy frontend to Azure Container Apps
         uses: azure/container-apps-deploy-action@v1
         with:
           appSourcePath: ${{ github.workspace }}/frontend
           acrName: ${{ env.AZURE_CONTAINER_REGISTRY }}
-          acrUsername: ${{ secrets.AZURE_ACR_USERNAME }}
-          acrPassword: ${{ secrets.AZURE_ACR_PASSWORD }}
           containerAppName: edunexus-web
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppEnvironment: ${{ env.AZURE_CONTAINERAPPS_ENV }}
