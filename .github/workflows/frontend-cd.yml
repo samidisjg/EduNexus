@@ -23,6 +23,7 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
       AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY }}
       AZURE_CONTAINERAPPS_ENV: ${{ vars.AZURE_CONTAINERAPPS_ENV }}
+      AZURE_GATEWAY_BASE_URL: ${{ vars.AZURE_GATEWAY_BASE_URL }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -35,7 +36,7 @@ jobs:
         shell: bash
         run: |
           missing=0
-          for key in AZURE_RESOURCE_GROUP AZURE_CONTAINER_REGISTRY AZURE_CONTAINERAPPS_ENV AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+          for key in AZURE_RESOURCE_GROUP AZURE_CONTAINER_REGISTRY AZURE_CONTAINERAPPS_ENV AZURE_GATEWAY_BASE_URL AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
             if [ -z "${!key}" ]; then
               echo "::error::$key is not configured."
               missing=1
@@ -65,5 +66,7 @@ jobs:
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppEnvironment: ${{ env.AZURE_CONTAINERAPPS_ENV }}
           imageToBuild: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/edunexus-web:${{ env.IMAGE_TAG }}
+          buildArguments: |
+            "VITE_API_BASE_URL=${{ env.AZURE_GATEWAY_BASE_URL }}"
           targetPort: "80"
           ingress: external
