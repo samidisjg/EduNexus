@@ -182,7 +182,7 @@ public class BorrowService {
     public BorrowRecord getBorrowRecordEntityById(Long borrowId) {
         log.info("Resolving borrow record entity. borrowId={}", borrowId);
         return borrowRecordRepository.findById(borrowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Borrow record not found with id: " + borrowId));
+                .orElseThrow(() -> new ResourceNotFoundException("Note: borrow record not found for ID " + borrowId));
     }
 
     private BorrowResponse mapToResponse(BorrowRecord borrowRecord) {
