@@ -360,7 +360,7 @@ const FineDashboard = () => {
 
           <div className="relative flex min-h-[360px] items-end px-6 py-8 md:min-h-[400px] md:px-8 md:py-10 lg:px-10 lg:py-12">
             <div className="max-w-4xl space-y-5 text-white">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">Library Fine Service</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">EduNexus Library Fine Service</p>
               <h1 className="max-w-4xl text-4xl font-black leading-tight md:text-5xl">
                 Clear fine records, quick payment actions, one calm workspace.
               </h1>

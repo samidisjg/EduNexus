@@ -331,7 +331,7 @@ const LibraryDashboard = () => {
 
               <div>
                 <h1 className="max-w-3xl text-4xl font-black leading-tight text-white md:text-5xl">
-                  EduNexus library operations dashboard
+                  EduNexus library operations dashboard Service
                 </h1>
                 <p className="mt-4 max-w-2xl text-base text-slate-300 md:text-lg">
                   A polished working space for collection control, circulation flows, and staff-ready insights,

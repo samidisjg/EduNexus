@@ -89,7 +89,7 @@ public class FineService {
     @Transactional(readOnly = true)
     public Fine getFineEntityByFineId(String fineId) {
         return fineRepository.findByFineId(fineId)
-                .orElseThrow(() -> new ResourceNotFoundException("Fine not found with fineId: " + fineId));
+                .orElseThrow(() -> new ResourceNotFoundException("Demo update: fine record not found for ID " + fineId));
     }
 
     private FineCalculationResponse mapToCalculationResponse(Fine fine) {
