@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-ARG VITE_API_BASE_URL=http://localhost:8081/api-gateway
+ARG VITE_API_BASE_URL=https://edunexus-api-gateway.happyflower-d104927b.southeastasia.azurecontainerapps.io/api-gateway
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
 
