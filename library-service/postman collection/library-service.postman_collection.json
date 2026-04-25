@@ -1,0 +1,302 @@
+{
+  "info": {
+    "_postman_id": "7f4b6e8a-95d6-4da5-a5ab-library-service",
+    "name": "EduNexus Library Service",
+    "description": "Postman collection for all public and internal Library Service endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Book APIs",
+      "item": [
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"ISBN-9780132350884\",\n  \"totalCopies\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "books"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "books"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Book By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/books/{{bookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code - Updated\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"ISBN-9780132350884\",\n  \"totalCopies\": 6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/books/{{bookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/books/{{bookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Borrow APIs",
+      "item": [
+        {
+          "name": "Borrow Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": 1,\n  \"studentId\": \"IT22607232\",\n  \"borrowDate\": \"2026-04-25\",\n  \"dueDate\": \"2026-05-02\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/borrow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "borrow"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Return Book",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/return/{{borrowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "return",
+                "{{borrowId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Borrowings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/borrowings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "borrowings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Borrowing By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/borrowings/{{borrowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "borrowings",
+                "{{borrowId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Borrowings By Student Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/borrowings/student/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "borrowings",
+                "student",
+                "{{studentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Active Borrowings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/borrowings/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "borrowings",
+                "active"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal APIs",
+      "item": [
+        {
+          "name": "Update Fine Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-INTERNAL-KEY",
+                "value": "{{internalApiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fineId\": \"FINE-001\",\n  \"status\": \"PAID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/internal/library/borrows/{{borrowId}}/fine-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "internal",
+                "library",
+                "borrows",
+                "{{borrowId}}",
+                "fine-status"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083/library-service"
+    },
+    {
+      "key": "bookId",
+      "value": "1"
+    },
+    {
+      "key": "borrowId",
+      "value": "1"
+    },
+    {
+      "key": "studentId",
+      "value": "IT22607232"
+    },
+    {
+      "key": "internalApiKey",
+      "value": "my-secret-internal-key"
+    }
+  ]
+}
